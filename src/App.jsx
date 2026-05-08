@@ -15,9 +15,11 @@ import { useState } from 'react';
 import Settings from '@/pages/Settings';
 import PanicMode from '@/pages/PanicMode';
 import EmergencyContacts from '@/pages/EmergencyContacts';
+import Zones from '@/pages/Zones';
 import VoiceListener from '@/components/VoiceListener';
 import BatteryMonitor from '@/components/BatteryMonitor';
 import TrialBanner from '@/components/TrialBanner';
+import ZoneMonitor from '@/components/ZoneMonitor';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -46,12 +48,14 @@ const AuthenticatedApp = () => {
     <SafetyProvider>
       <VoiceListener />
       <BatteryMonitor />
+      <ZoneMonitor />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/journal" element={<Journal />} />
         <Route path="/insights" element={<Insights />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/emergency-contacts" element={<EmergencyContacts />} />
+        <Route path="/zones" element={<Zones />} />
         <Route path="/panic" element={<PanicMode />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>

@@ -1,0 +1,32 @@
+{
+  "name": "Zone",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Zone name (e.g., Home, School, Workplace)"
+    },
+    "latitude": {
+      "type": "number",
+      "description": "Center latitude coordinate"
+    },
+    "longitude": {
+      "type": "number",
+      "description": "Center longitude coordinate"
+    },
+    "radius_meters": {
+      "type": "number",
+      "description": "Zone radius in meters (default 500)"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this zone is actively monitored"
+    }
+  },
+  "required": [
+    "name",
+    "latitude",
+    "longitude"
+  ]
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, BookOpen, BarChart3, Settings } from 'lucide-react';
+import { Home, BookOpen, BarChart3, Settings, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSafety } from '@/lib/safetyContext.jsx';
 
@@ -31,6 +31,7 @@ export default function BottomNav() {
   const items = [
     { icon: Home, label: "Home", active: true, onClick: () => navigate('/') },
     { icon: BookOpen, label: "Journal", active: false, onClick: () => { handleJournalTap(); navigate('/journal'); } },
+    { icon: MapPin, label: "Zones", active: false, onClick: () => navigate('/zones') },
     { icon: BarChart3, label: "Insights", active: false, onClick: () => navigate('/insights') },
     { icon: Settings, label: "More", active: false, onClick: () => {} },
   ];
