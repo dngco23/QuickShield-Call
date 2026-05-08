@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle2, Clock } from 'lucide-react';
 import { useSafety } from '@/lib/safetyContext.jsx';
+import { usePowerSave } from '@/lib/powerSaveContext';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 
 export default function CheckIn() {
   const { activeCheckIn, cancelCheckIn } = useSafety();
+  const { isPowerSaving } = usePowerSave();
   const [timeLeft, setTimeLeft] = useState(null);
   const [confirming, setConfirming] = useState(false);
   const [user, setUser] = useState(null);

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Battery, AlertTriangle, Loader2 } from 'lucide-react';
+import { Battery, AlertTriangle, Loader2, Cpu } from 'lucide-react';
 import { useBatteryMonitor } from '@/lib/useBatteryMonitor';
 import { useSafety } from '@/lib/safetyContext.jsx';
+import { usePowerSave } from '@/lib/powerSaveContext';
 import { base44 } from '@/api/base44Client';
 
 export default function BatteryMonitor() {
   const { panicModeActive, activeCheckIn } = useSafety();
+  const { isPowerSaving } = usePowerSave();
   const [alertSent, setAlertSent] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [user, setUser] = React.useState(null);
@@ -57,6 +59,19 @@ export default function BatteryMonitor() {
 
   const inCrisis = panicModeActive || activeCheckIn;
   const showAlert = inCrisis && batteryLevel !== null && batteryLevel < 10 && !isCharging;
+
+  if (isPowerSaving && batteryLevel < 15 && !isCharging) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="fixed top-4 left-4 z-40 bg-yellow-500/90 text-yellow-900 px-4 py-2.5 rounded-lg text-xs font-medium flex items-center gap-2 shadow-lg"
+      >
+        <Cpu className="w-3.5 h-3.5 animate-pulse" />
+        <span>Power Save: Background processes disabled, SOS active</span>
+      </motion.div>
+    );
+  }
 
   return (
     <AnimatePresence>

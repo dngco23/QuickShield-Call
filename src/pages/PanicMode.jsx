@@ -6,6 +6,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { base44 } from '@/api/base44Client';
 import { useSafety } from '@/lib/safetyContext.jsx';
+import { usePowerSave } from '@/lib/powerSaveContext';
 import { useAudioRecorder } from '@/lib/useAudioRecorder';
 import { Button } from '@/components/ui/button';
 import PanicMessaging from '@/components/PanicMessaging';
@@ -21,6 +22,7 @@ L.Icon.Default.mergeOptions({
 export default function PanicMode() {
   const navigate = useNavigate();
   const { panicModeActive, setPanicModeActive } = useSafety();
+  const { isPowerSaving } = usePowerSave();
   const { startRecording, stopRecording } = useAudioRecorder();
   const [location, setLocation] = useState(null);
   const [message, setMessage] = useState('');
@@ -80,18 +82,20 @@ export default function PanicMode() {
   }, [setPanicModeActive, startRecording]);
 
   useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.watchPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => console.error('Geolocation error:', error)
-      );
+    if (isPowerSaving || !('geolocation' in navigator)) {
+      return;
     }
-  }, []);
+
+    navigator.geolocation.watchPosition(
+      (position) => {
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        });
+      },
+      (error) => console.error('Geolocation error:', error)
+    );
+  }, [isPowerSaving]);
 
   // Recording timer
   useEffect(() => {

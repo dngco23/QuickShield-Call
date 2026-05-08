@@ -7,7 +7,9 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { SafetyProvider } from '@/lib/safetyContext.jsx';
 import { TrialProvider } from '@/lib/trialContext';
+import { PowerSaveProvider } from '@/lib/powerSaveContext';
 import Home from '@/pages/Home';
+import { useState } from 'react';
 import Settings from '@/pages/Settings';
 import PanicMode from '@/pages/PanicMode';
 import VoiceListener from '@/components/VoiceListener';
@@ -55,11 +57,13 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <TrialProvider>
-          <Router>
-            <AuthenticatedApp />
-          </Router>
-        </TrialProvider>
+        <PowerSaveProvider>
+          <TrialProvider>
+            <Router>
+              <AuthenticatedApp />
+            </Router>
+          </TrialProvider>
+        </PowerSaveProvider>
         <Toaster />
       </QueryClientProvider>
     </AuthProvider>
