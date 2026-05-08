@@ -8,7 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { useSafety } from '@/lib/safetyContext.jsx';
 
 export default function HiddenSettings() {
-  const { showSettings, setShowSettings, settings, saveSettings } = useSafety();
+  const { showSettings, setShowSettings, settings, saveSettings, stealthMode, setStealthMode } = useSafety();
   const [form, setForm] = useState(settings);
 
   const handleSave = () => {
@@ -125,6 +125,55 @@ export default function HiddenSettings() {
                   />
                   <p className="text-xs text-muted-foreground">Leave empty to disable. The app will listen for this word and trigger the fake call.</p>
                 </div>
+              </div>
+
+              <div className="border-t border-border/50 pt-4 mt-1">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground mb-1">Stealth Mode</p>
+                    <p className="text-xs text-muted-foreground">Hide as calculator or weather app</p>
+                  </div>
+                  <button
+                    onClick={() => setStealthMode(!stealthMode)}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                      stealthMode ? 'bg-primary' : 'bg-muted'
+                    }`}
+                  >
+                    <div
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
+                        stealthMode ? 'translate-x-5' : ''
+                      }`}
+                    />
+                  </button>
+                </div>
+                {stealthMode && (
+                  <div className="mt-3 space-y-2">
+                    <Label className="text-sm text-muted-foreground">Choose Disguise</Label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setForm({ ...form, stealthModeType: 'calculator' })}
+                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                          form.stealthModeType === 'calculator'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        🧮 Calculator
+                      </button>
+                      <button
+                        onClick={() => setForm({ ...form, stealthModeType: 'weather' })}
+                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                          form.stealthModeType === 'weather'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }`}
+                      >
+                        ☀️ Weather
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground pt-2">Tap the display 5 times to exit stealth mode</p>
+                  </div>
+                )}
               </div>
             </div>
 

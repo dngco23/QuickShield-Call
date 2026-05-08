@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS = {
   emergencyContactName: "",
   emergencyContactNumber: "",
   voiceWakeWord: "",
+  stealthModeType: "calculator",
 };
 
 export function SafetyProvider({ children }) {
@@ -23,6 +24,7 @@ export function SafetyProvider({ children }) {
     return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
   });
   const [activeCheckIn, setActiveCheckIn] = useState(null);
+  const [stealthMode, setStealthMode] = useState(false);
 
   useEffect(() => {
     const syncCountry = async () => {
@@ -94,6 +96,8 @@ export function SafetyProvider({ children }) {
       activeCheckIn,
       startCheckIn,
       cancelCheckIn,
+      stealthMode,
+      setStealthMode,
     }}>
       {children}
     </SafetyContext.Provider>

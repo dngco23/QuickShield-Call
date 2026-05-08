@@ -14,12 +14,13 @@ import HiddenSettings from '@/components/HiddenSettings';
 import SOSButton from '@/components/SOSButton';
 import CheckIn from '@/components/CheckIn';
 import AudioRecorder from '@/components/AudioRecorder';
+import StealthMode from '@/components/StealthMode';
 import { useSafety } from '@/lib/safetyContext.jsx';
 
 export default function Home() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const { settings, startCheckIn } = useSafety();
+  const { settings, startCheckIn, stealthMode } = useSafety();
   const [user, setUser] = useState(null);
   const { triggerCall } = useSafety();
 
@@ -34,6 +35,10 @@ export default function Home() {
     };
     loadUser();
   }, []);
+
+  if (stealthMode) {
+    return <StealthMode />;
+  }
 
   return (
     <div className="min-h-screen bg-background pb-24">
