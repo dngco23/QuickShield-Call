@@ -9,6 +9,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { isAndroid, isIOS } from '@/lib/deviceDetect';
 
 function MapClickHandler({ onLocationSelect }) {
@@ -171,15 +172,21 @@ export default function Zones() {
             </div>
 
             <div>
-              <Label className="text-sm text-muted-foreground">Radius (meters)</Label>
-              <Input
-                type="number"
-                value={formData.radius_meters}
-                onChange={(e) => setFormData({ ...formData, radius_meters: parseInt(e.target.value) })}
-                min="100"
-                max="5000"
-                className="mt-1 bg-muted/50"
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm text-muted-foreground">Radius: {formData.radius_meters}m</Label>
+              </div>
+              <Slider
+                value={[formData.radius_meters]}
+                onValueChange={(value) => setFormData({ ...formData, radius_meters: value[0] })}
+                min={100}
+                max={5000}
+                step={50}
+                className="w-full"
               />
+              <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                <span>100m</span>
+                <span>5000m</span>
+              </div>
             </div>
 
             <div className="space-y-2">
