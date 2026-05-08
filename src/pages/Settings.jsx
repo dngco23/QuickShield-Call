@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { getCountryOptions, getDefaultNumberForCountry } from '@/lib/countryNumbers';
 import PrivacyPurge from '@/components/PrivacyPurge';
+import MapDownloader from '@/components/MapDownloader';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -109,7 +110,7 @@ export default function Settings() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-card rounded-2xl border border-border/50 p-6 max-w-md"
+          className="bg-card rounded-2xl border border-border/50 p-6 max-w-2xl"
         >
           <div className="space-y-5">
             <div className="space-y-2">
@@ -220,6 +221,8 @@ export default function Settings() {
                 </div>
               </div>
             </div>
+
+            <MapDownloader />
           </div>
 
           <Button
