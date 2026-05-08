@@ -8,6 +8,8 @@ const DEFAULT_SETTINGS = {
   triggerWord: "lavender",
   callDelay: 3,
   autoDeclineSeconds: 0,
+  emergencyContactName: "",
+  emergencyContactNumber: "",
 };
 
 export function SafetyProvider({ children }) {

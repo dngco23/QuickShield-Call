@@ -73,6 +73,31 @@ export default function HiddenSettings() {
                 <p className="text-xs text-muted-foreground">Type this word in the search bar to trigger a call</p>
               </div>
 
+              <div className="border-t border-border/50 pt-4 mt-1">
+                <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">SOS Emergency Contact</p>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Contact Name</Label>
+                    <Input
+                      value={form.emergencyContactName}
+                      onChange={(e) => setForm({ ...form, emergencyContactName: e.target.value })}
+                      placeholder="e.g. Mom, Best Friend"
+                      className="bg-muted/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Contact Phone Number</Label>
+                    <Input
+                      value={form.emergencyContactNumber}
+                      onChange={(e) => setForm({ ...form, emergencyContactNumber: e.target.value })}
+                      placeholder="+1 (555) 012-3456"
+                      className="bg-muted/50"
+                    />
+                    <p className="text-xs text-muted-foreground">SOS SMS will be sent to this number</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="space-y-3">
                 <Label className="text-sm text-muted-foreground">
                   Call Delay: {form.callDelay}s

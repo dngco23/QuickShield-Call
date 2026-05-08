@@ -8,10 +8,13 @@ import QuickActions from '@/components/wellness/QuickActions';
 import BottomNav from '@/components/wellness/BottomNav';
 import FakeCallOverlay from '@/components/FakeCallOverlay';
 import HiddenSettings from '@/components/HiddenSettings';
+import SOSButton from '@/components/SOSButton';
+import { useSafety } from '@/lib/safetyContext.jsx';
 
 export default function Home() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const { settings } = useSafety();
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -46,6 +49,25 @@ export default function Home() {
         <WellnessCards />
         <QuickActions />
         
+        {/* SOS Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="bg-red-50 border border-red-100 rounded-2xl p-5"
+        >
+          <p className="text-xs font-medium text-red-400 uppercase tracking-wider text-center mb-4">Emergency SOS</p>
+          <SOSButton
+            emergencyContact={settings.emergencyContactNumber}
+            emergencyName={settings.emergencyContactName}
+          />
+          {!settings.emergencyContactNumber && (
+            <p className="text-xs text-red-400/70 text-center mt-3 font-body">
+              Set an emergency contact in Preferences (triple-tap Insights)
+            </p>
+          )}
+        </motion.div>
+
         {/* Subtle daily tip */}
         <motion.div
           initial={{ opacity: 0 }}
