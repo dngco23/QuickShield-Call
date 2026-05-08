@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ChildCard from '@/components/ChildCard';
+import LocationMap from '@/components/LocationMap';
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function ParentDashboard() {
   const [childEmail, setChildEmail] = useState('');
   const [childName, setChildName] = useState('');
   const [linking, setLinking] = useState(false);
+  const [selectedChildId, setSelectedChildId] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -166,16 +168,29 @@ export default function ParentDashboard() {
         )}
 
         {linkedChildren.length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-1">
               Linked Children
             </p>
             {linkedChildren.map((child) => (
-              <ChildCard
-                key={child.id}
-                child={child}
-                onUnlink={() => handleUnlink(child.id)}
-              />
+              <div key={child.id} className="space-y-3">
+                <button
+                  onClick={() => setSelectedChildId(selectedChildId === child.id ? null : child.id)}
+                  className="w-full"
+                >
+                  <ChildCard
+                    child={child}
+                    onUnlink={() => handleUnlink(child.id)}
+                  />
+                </button>
+                {selectedChildId === child.id && child.last_location && (
+                  <LocationMap
+                    latitude={child.last_location.latitude}
+                    longitude={child.last_location.longitude}
+                    childName={child.child_name}
+                  />
+                )}
+              </div>
             ))}
           </div>
         )}
