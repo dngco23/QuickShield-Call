@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon, Phone } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import SearchBar from '@/components/wellness/SearchBar';
 import QuoteWidget from '@/components/wellness/QuoteWidget';
@@ -19,6 +19,7 @@ export default function Home() {
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const { settings } = useSafety();
   const [user, setUser] = useState(null);
+  const { triggerCall } = useSafety();
 
   useEffect(() => {
     const loadUser = async () => {
@@ -67,6 +68,20 @@ export default function Home() {
         <MoodTracker />
         <WellnessCards />
         <QuickActions />
+
+        {/* Fake Call Button */}
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.43 }}
+          onClick={triggerCall}
+          className="w-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 rounded-2xl p-4 hover:from-primary/30 hover:to-accent/30 transition-all active:scale-98"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <Phone className="w-5 h-5 text-primary" />
+            <span className="font-body font-medium text-foreground">Fake Call</span>
+          </div>
+        </motion.button>
         
         {/* SOS Button */}
         <motion.div
