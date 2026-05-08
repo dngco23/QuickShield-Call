@@ -25,7 +25,17 @@ export default function VoiceListener() {
       }
     };
     checkPermission();
-  }, []);
+
+    // Request persistent microphone access for background listening
+    const requestMicrophoneAccess = async () => {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (_) {}
+    };
+    if (settings.voiceWakeWord && settings.voiceWakeWord.trim()) {
+      requestMicrophoneAccess();
+    }
+  }, [settings.voiceWakeWord]);
 
   if (!settings.voiceWakeWord || !settings.voiceWakeWord.trim()) {
     return null;

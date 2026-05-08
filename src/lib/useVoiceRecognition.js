@@ -4,6 +4,8 @@ export function useVoiceRecognition(wakeWord, onWakeWordDetected) {
   const recognitionRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState(null);
+  const restartTimeoutRef = useRef(null);
+  const wakeLockRef = useRef(null);
 
   useEffect(() => {
     if (!wakeWord || !wakeWord.trim()) return;
@@ -11,12 +13,23 @@ export function useVoiceRecognition(wakeWord, onWakeWordDetected) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
+    // Request wake lock to keep app active for background listening
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLockRef.current = await navigator.wakeLock.request('screen');
+        }
+      } catch (_) {}
+    };
+    requestWakeLock();
+
     recognitionRef.current = new SpeechRecognition();
     const recognition = recognitionRef.current;
 
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.language = 'en-US';
+    recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -24,40 +37,48 @@ export function useVoiceRecognition(wakeWord, onWakeWordDetected) {
     };
 
     recognition.onresult = (event) => {
-      let interimTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript.toLowerCase().trim();
         if (event.results[i].isFinal) {
           if (transcript.includes(wakeWord.toLowerCase())) {
             onWakeWordDetected();
-            // Restart to avoid multiple triggers
-            recognition.stop();
-            recognition.start();
+            // Clear restart timeout and restart fresh
+            clearTimeout(restartTimeoutRef.current);
+            try {
+              recognition.stop();
+              setTimeout(() => {
+                try {
+                  recognition.start();
+                } catch (_) {}
+              }, 500);
+            } catch (_) {}
           }
-        } else {
-          interimTranscript += transcript + ' ';
         }
       }
     };
 
     recognition.onerror = (event) => {
       setError(event.error);
-      if (event.error === 'no-speech') {
-        // Restart on silence
-        setTimeout(() => {
+      // Restart on errors except for abort
+      if (event.error !== 'aborted') {
+        clearTimeout(restartTimeoutRef.current);
+        restartTimeoutRef.current = setTimeout(() => {
           try {
             recognition.start();
           } catch (_) {}
-        }, 1000);
+        }, 1500);
       }
     };
 
     recognition.onend = () => {
       setIsListening(false);
-      // Restart listening if it ended unexpectedly
-      try {
-        recognition.start();
-      } catch (_) {}
+      // Auto-restart listening if it ended unexpectedly
+      clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = setTimeout(() => {
+        try {
+          recognition.start();
+        } catch (_) {}
+      }, 1000);
     };
 
     // Start listening
@@ -66,9 +87,14 @@ export function useVoiceRecognition(wakeWord, onWakeWordDetected) {
     } catch (_) {}
 
     return () => {
+      clearTimeout(restartTimeoutRef.current);
       try {
         recognition.stop();
       } catch (_) {}
+      // Release wake lock
+      if (wakeLockRef.current) {
+        wakeLockRef.current.release().catch(() => {});
+      }
     };
   }, [wakeWord, onWakeWordDetected]);
 
