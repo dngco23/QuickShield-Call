@@ -84,6 +84,28 @@ export function SafetyProvider({ children }) {
     setActiveCheckIn(null);
   }, []);
 
+  const triggerSOS = useCallback(async () => {
+    // Start check-in with 0 duration to immediately trigger SOS
+    const now = Date.now();
+    let lat, lng;
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        lat = position.coords.latitude;
+        lng = position.coords.longitude;
+      });
+    }
+
+    setActiveCheckIn({
+      startedAt: now,
+      expiresAt: now,
+      durationMinutes: 0,
+      lat,
+      lng,
+      isVoiceTriggered: true,
+    });
+  }, []);
+
   return (
     <SafetyContext.Provider value={{
       showCall,
@@ -98,6 +120,7 @@ export function SafetyProvider({ children }) {
       cancelCheckIn,
       stealthMode,
       setStealthMode,
+      triggerSOS,
     }}>
       {children}
     </SafetyContext.Provider>

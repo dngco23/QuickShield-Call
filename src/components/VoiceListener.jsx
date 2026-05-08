@@ -5,12 +5,11 @@ import { useVoiceRecognition } from '@/lib/useVoiceRecognition';
 import { useSafety } from '@/lib/safetyContext.jsx';
 
 export default function VoiceListener() {
-  const { settings } = useSafety();
+  const { settings, triggerSOS } = useSafety();
   const [hasPermission, setHasPermission] = useState(null);
-  const { triggerCall } = useSafety();
 
   const handleWakeWordDetected = () => {
-    triggerCall();
+    triggerSOS();
   };
 
   const { isListening, error } = useVoiceRecognition(settings.voiceWakeWord, handleWakeWordDetected);
