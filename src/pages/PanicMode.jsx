@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, AlertCircle, Send, Loader2, Mic, Upload, Wifi, WifiOff } from 'lucide-react';
+import { ChevronLeft, AlertCircle, Send, Loader2, Mic, Wifi, WifiOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -10,6 +10,14 @@ import { usePowerSave } from '@/lib/powerSaveContext';
 import { useAudioRecorder } from '@/lib/useAudioRecorder';
 import { Button } from '@/components/ui/button';
 import PanicMessaging from '@/components/PanicMessaging';
+
+const PRESET_MESSAGES = [
+  'I need immediate help',
+  'Currently unsafe, please call',
+  'Emergency - can you come pick me up?',
+  'Help, I am in danger',
+  'Call 911, I need emergency assistance'
+];
 
 // Fix leaflet default icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -116,14 +124,18 @@ export default function PanicMode() {
 
   const handleStopRecording = async () => {
     setIsRecording(false);
-    const result = await stopRecording();
-    
-    if (result) {
-      // Ask if user wants to upload to emergency contact
-      const shouldUpload = window.confirm('Upload recording to emergency contact?');
-      if (shouldUpload && user?.emergencyContactNumber) {
-        await handleUploadRecording(result.blob);
+    try {
+      const result = await stopRecording();
+      
+      if (result) {
+        // Ask if user wants to upload to emergency contact
+        const shouldUpload = window.confirm('Upload recording to emergency contact?');
+        if (shouldUpload && user?.emergencyContactNumber) {
+          await handleUploadRecording(result.blob);
+        }
       }
+    } catch (error) {
+      console.error('Error stopping recording:', error);
     }
   };
 
@@ -162,23 +174,40 @@ export default function PanicMode() {
     }
   };
 
-  const handleSendUpdate = async () => {
-    if (!message.trim() || !user?.emergencyContactNumber) {
-      alert('Please enter a message and set an emergency contact');
+  const handleSendUpdate = async (msg = null) => {
+    const textToSend = msg || message;
+    if (!textToSend.trim()) {
+      alert('Please select or enter a message');
+      return;
+    }
+
+    if (!user?.emergencyContact1Number && !user?.emergencyContact2Number) {
+      alert('No emergency contacts set. Please add contacts in settings.');
       return;
     }
 
     setIsSending(true);
     try {
-      const finalMessage = `${message}\n\nLocation: ${location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : 'Unavailable'}`;
+      const locationText = location ? `\nhttps://maps.google.com/?q=${location.lat},${location.lng}` : '';
+      const finalMessage = `${textToSend}${locationText}`;
       
-      await base44.functions.invoke('sendSOSSms', {
-        to: user.emergencyContactNumber,
-        message: finalMessage
-      });
+      const promises = [];
+      if (user?.emergencyContact1Number) {
+        promises.push(base44.functions.invoke('sendSOSSms', {
+          to: user.emergencyContact1Number,
+          message: finalMessage
+        }));
+      }
+      if (user?.emergencyContact2Number) {
+        promises.push(base44.functions.invoke('sendSOSSms', {
+          to: user.emergencyContact2Number,
+          message: finalMessage
+        }));
+      }
 
+      await Promise.all(promises);
       setMessage('');
-      alert('Emergency update sent!');
+      alert('Emergency message sent to all contacts!');
     } catch (error) {
       console.error('Failed to send message:', error);
       alert('Failed to send message. Please try again.');
@@ -307,10 +336,30 @@ export default function PanicMode() {
           )}
         </Button>
 
+        {/* Preset Messages */}
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Quick Messages
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            {PRESET_MESSAGES.map((msg) => (
+              <Button
+                key={msg}
+                onClick={() => handleSendUpdate(msg)}
+                disabled={isSending}
+                variant="outline"
+                className="text-xs h-auto py-2 px-2 text-left whitespace-normal"
+              >
+                {msg}
+              </Button>
+            ))}
+          </div>
+        </div>
+
         {/* Message Box */}
         <div className="space-y-2">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Emergency Message
+            Or Type Custom Message
           </label>
           <textarea
             value={message}
@@ -321,18 +370,13 @@ export default function PanicMode() {
           />
           <div className="flex justify-between items-center">
             <p className="text-xs text-muted-foreground">{message.length}/160</p>
-            {user?.emergencyContactNumber && (
-              <p className="text-xs text-muted-foreground">
-                To: {user.emergencyContactName || user.emergencyContactNumber}
-              </p>
-            )}
           </div>
         </div>
 
         {/* Send Button */}
         <Button
-          onClick={handleSendUpdate}
-          disabled={isSending || !message.trim() || !user?.emergencyContactNumber}
+          onClick={() => handleSendUpdate()}
+          disabled={isSending || !message.trim()}
           className="w-full bg-primary hover:bg-primary/90"
         >
           {isSending ? (
@@ -343,32 +387,20 @@ export default function PanicMode() {
           ) : (
             <>
               <Send className="w-4 h-4 mr-2" />
-              Send Emergency Update
+              Send Custom Message
             </>
           )}
         </Button>
 
-        {/* Encrypted Messaging */}
-        <div className="space-y-3">
-          {user?.emergencyContact1Number && (
-            <PanicMessaging
-              emergencyContact={user.emergencyContact1Number}
-              emergencyName={user.emergencyContact1Name}
-              isVisible={true}
-            />
-          )}
-          {user?.emergencyContact2Number && (
-            <PanicMessaging
-              emergencyContact={user.emergencyContact2Number}
-              emergencyName={user.emergencyContact2Name}
-              isVisible={true}
-            />
-          )}
-        </div>
-
-        {!user?.emergencyContact1Number && !user?.emergencyContact2Number && (
-          <p className="text-xs text-destructive text-center">
-            Please set emergency contacts in Settings
+        {user?.emergencyContact1Number || user?.emergencyContact2Number ? (
+          <div className="bg-accent/30 border border-accent rounded-lg p-3">
+            <p className="text-xs text-accent-foreground/70 font-body">
+              ✓ Messages will be sent to {user?.emergencyContact1Name || 'Contact 1'}{user?.emergencyContact2Number ? ` and ${user?.emergencyContact2Name || 'Contact 2'}` : ''}
+            </p>
+          </div>
+        ) : (
+          <p className="text-xs text-destructive text-center bg-destructive/10 border border-destructive/30 rounded-lg p-3">
+            ⚠ No emergency contacts set. Add contacts in Settings to send messages.
           </p>
         )}
       </motion.div>
