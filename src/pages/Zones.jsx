@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Plus, Loader2, Trash2, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { MapContainer, TileLayer, Marker, Circle, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Circle, Popup, useMapEvent } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { base44 } from '@/api/base44Client';
@@ -10,6 +10,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { isAndroid, isIOS } from '@/lib/deviceDetect';
+
+function MapClickHandler({ onLocationSelect }) {
+  useMapEvent('click', (e) => {
+    onLocationSelect({
+      latitude: e.latlng.lat,
+      longitude: e.latlng.lng
+    });
+  });
+  return null;
+}
 
 // Fix leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -58,11 +68,11 @@ export default function Zones() {
     }
   };
 
-  const handleMapClick = (e) => {
+  const handleMapClick = ({ latitude, longitude }) => {
     setFormData({
       ...formData,
-      latitude: e.latlng.lat,
-      longitude: e.latlng.lng
+      latitude,
+      longitude
     });
   };
 
@@ -179,14 +189,14 @@ export default function Zones() {
                   key={`${mapCenter[0]}-${mapCenter[1]}`}
                   center={mapCenter}
                   zoom={16}
-                  style={{ height: '100%', width: '100%', display: 'flex', flex: 1 }}
-                  onClick={handleMapClick}
+                  style={{ height: '100%', width: '100%' }}
                   className="flex-1"
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; OpenStreetMap contributors'
                   />
+                  <MapClickHandler onLocationSelect={handleMapClick} />
                   {formData.latitude && formData.longitude && (
                     <>
                       <Marker position={[formData.latitude, formData.longitude]}>
