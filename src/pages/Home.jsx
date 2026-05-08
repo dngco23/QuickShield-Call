@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { Settings as SettingsIcon } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import SearchBar from '@/components/wellness/SearchBar';
 import QuoteWidget from '@/components/wellness/QuoteWidget';
 import MoodTracker from '@/components/wellness/MoodTracker';
@@ -15,6 +18,19 @@ export default function Home() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const { settings } = useSafety();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const currentUser = await base44.auth.me();
+        setUser(currentUser);
+      } catch (error) {
+        console.error('Failed to load user:', error);
+      }
+    };
+    loadUser();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -34,9 +50,12 @@ export default function Home() {
               Bloom
             </h1>
           </div>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center">
-            <span className="text-lg">🌸</span>
-          </div>
+          <Link
+            to="/settings"
+            className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center hover:opacity-80 transition-opacity"
+          >
+            <SettingsIcon className="w-5 h-5 text-primary" />
+          </Link>
         </motion.div>
 
         <SearchBar />
@@ -58,13 +77,13 @@ export default function Home() {
         >
           <p className="text-xs font-medium text-red-400 uppercase tracking-wider text-center mb-4">Emergency SOS</p>
           <SOSButton
-            emergencyContact={settings.emergencyContactNumber}
-            emergencyName={settings.emergencyContactName}
+            emergencyContact={user?.emergencyContactNumber}
+            emergencyName={user?.emergencyContactName}
           />
-          {!settings.emergencyContactNumber && (
-            <p className="text-xs text-red-400/70 text-center mt-3 font-body">
-              Set an emergency contact in Preferences (triple-tap Insights)
-            </p>
+          {!user?.emergencyContactNumber && (
+            <Link to="/settings" className="text-xs text-red-400/70 text-center mt-3 font-body hover:text-red-400 transition-colors block">
+              Set an emergency contact in Settings
+            </Link>
           )}
         </motion.div>
 

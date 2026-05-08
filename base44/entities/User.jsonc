@@ -1,0 +1,14 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "emergencyContactName": {
+      "type": "string",
+      "description": "Name of the emergency contact"
+    },
+    "emergencyContactNumber": {
+      "type": "string",
+      "description": "Phone number of the emergency contact"
+    }
+  }
+}
