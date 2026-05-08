@@ -16,7 +16,9 @@ export default function SOSButton({ emergencyContact1, emergencyName1, emergency
   const holdTimeout = useRef(null);
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
+  const videoChunks = useRef([]);
   const recordingStartTime = useRef(null);
+  const videoStream = useRef(null);
 
   const startHold = (e) => {
     e.preventDefault();
@@ -47,16 +49,25 @@ export default function SOSButton({ emergencyContact1, emergencyName1, emergency
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: { facingMode: 'user' } });
+      videoStream.current = stream;
       mediaRecorder.current = new MediaRecorder(stream);
+      videoChunks.current = [];
       audioChunks.current = [];
       recordingStartTime.current = Date.now();
 
       mediaRecorder.current.ondataavailable = (event) => {
-        audioChunks.current.push(event.data);
+        videoChunks.current.push(event.data);
       };
 
       mediaRecorder.current.start();
+
+      // Auto-stop recording after 30 seconds
+      setTimeout(() => {
+        if (mediaRecorder.current && mediaRecorder.current.state === 'recording') {
+          mediaRecorder.current.stop();
+        }
+      }, 30000);
     } catch (err) {
       console.error('Failed to start recording:', err);
     }
@@ -71,12 +82,12 @@ export default function SOSButton({ emergencyContact1, emergencyName1, emergency
 
       mediaRecorder.current.onstop = async () => {
         try {
-          const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
+          const videoBlob = new Blob(videoChunks.current, { type: 'video/webm' });
           const duration = (Date.now() - recordingStartTime.current) / 1000;
 
-          // Upload file
+          // Upload video file
           const uploadRes = await base44.integrations.Core.UploadFile({
-            file: audioBlob,
+            file: videoBlob,
           });
 
           // Create recording entity
@@ -93,11 +104,15 @@ export default function SOSButton({ emergencyContact1, emergencyName1, emergency
         } catch (err) {
           console.error('Failed to upload recording:', err);
           resolve(null);
+        } finally {
+          // Stop all tracks
+          if (videoStream.current) {
+            videoStream.current.getTracks().forEach(track => track.stop());
+          }
         }
       };
 
       mediaRecorder.current.stop();
-      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
     });
   };
 
@@ -170,7 +185,9 @@ export default function SOSButton({ emergencyContact1, emergencyName1, emergency
     clearTimeout(holdTimeout.current);
     if (mediaRecorder.current && mediaRecorder.current.state === 'recording') {
       mediaRecorder.current.stop();
-      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
+    }
+    if (videoStream.current) {
+      videoStream.current.getTracks().forEach(track => track.stop());
     }
   }, []);
 
