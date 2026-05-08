@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { usePushNotifications } from '@/lib/usePushNotifications';
 
 const EARTH_RADIUS = 6371000; // meters
 
@@ -22,6 +23,8 @@ export default function ZoneMonitor() {
   const [zones, setZones] = useState([]);
   const [breachedZones, setBreachedZones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [previousZones, setPreviousZones] = useState(new Set());
+  const { sendNotification, permission } = usePushNotifications();
 
   useEffect(() => {
     const loadZones = async () => {
@@ -54,6 +57,49 @@ export default function ZoneMonitor() {
 
         setBreachedZones(breached);
 
+        // Detect zone exits
+        const breachedIds = new Set(breached.map(z => z.id));
+        zones.forEach((zone) => {
+          const wasInZone = !previousZones.has(zone.id);
+          const isInZone = !breachedIds.has(zone.id);
+
+          // Exited zone
+          if (wasInZone && !isInZone) {
+            playAlert();
+            if (permission === 'granted') {
+              base44.functions.invoke('sendPushNotification', {
+                zone_name: zone.name,
+                event_type: 'exit',
+                latitude,
+                longitude
+              }).catch(err => console.error('Failed to send exit notification:', err));
+              
+              sendNotification(`Left Safe Zone: ${zone.name}`, {
+                body: `You have left ${zone.name}`,
+                tag: `zone-${zone.id}`
+              });
+            }
+          }
+          // Entered zone
+          else if (!wasInZone && isInZone) {
+            if (permission === 'granted') {
+              base44.functions.invoke('sendPushNotification', {
+                zone_name: zone.name,
+                event_type: 'enter',
+                latitude,
+                longitude
+              }).catch(err => console.error('Failed to send enter notification:', err));
+              
+              sendNotification(`Entered Safe Zone: ${zone.name}`, {
+                body: `Welcome to ${zone.name}`,
+                tag: `zone-${zone.id}`
+              });
+            }
+          }
+        });
+
+        setPreviousZones(breachedIds);
+
         // Play alert sound if zones breached
         if (breached.length > 0) {
           playAlert();
@@ -64,7 +110,7 @@ export default function ZoneMonitor() {
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [zones, loading]);
+  }, [zones, loading, permission, previousZones, sendNotification]);
 
   const playAlert = () => {
     // Create a simple beep using Web Audio API

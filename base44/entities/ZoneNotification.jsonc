@@ -1,0 +1,40 @@
+{
+  "name": "ZoneNotification",
+  "type": "object",
+  "properties": {
+    "zone_name": {
+      "type": "string",
+      "description": "Name of the safe zone"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "enter",
+        "exit"
+      ],
+      "description": "Whether user entered or exited the zone"
+    },
+    "latitude": {
+      "type": "number",
+      "description": "User latitude when event occurred"
+    },
+    "longitude": {
+      "type": "number",
+      "description": "User longitude when event occurred"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "body": {
+      "type": "string",
+      "description": "Notification body/message"
+    }
+  },
+  "required": [
+    "zone_name",
+    "event_type",
+    "title",
+    "body"
+  ]
+}
