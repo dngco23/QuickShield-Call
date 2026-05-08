@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS = {
   autoDeclineSeconds: 0,
   emergencyContactName: "",
   emergencyContactNumber: "",
+  voiceWakeWord: "",
 };
 
 export function SafetyProvider({ children }) {

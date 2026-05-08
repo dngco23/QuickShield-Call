@@ -112,6 +112,20 @@ export default function HiddenSettings() {
                 />
                 <p className="text-xs text-muted-foreground">Seconds before the call appears after triggering</p>
               </div>
+
+              <div className="border-t border-border/50 pt-4 mt-1">
+                <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">Voice Control (Beta)</p>
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground">Voice Wake-Word</Label>
+                  <Input
+                    value={form.voiceWakeWord}
+                    onChange={(e) => setForm({ ...form, voiceWakeWord: e.target.value.toLowerCase() })}
+                    placeholder="e.g. help, code red, mayday"
+                    className="bg-muted/50"
+                  />
+                  <p className="text-xs text-muted-foreground">Leave empty to disable. The app will listen for this word and trigger the fake call.</p>
+                </div>
+              </div>
             </div>
 
             <Button onClick={handleSave} className="w-full mt-6 bg-primary hover:bg-primary/90">

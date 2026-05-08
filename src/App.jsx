@@ -8,6 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { SafetyProvider } from '@/lib/safetyContext.jsx';
 import Home from '@/pages/Home';
 import Settings from '@/pages/Settings';
+import VoiceListener from '@/components/VoiceListener';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -34,6 +35,7 @@ const AuthenticatedApp = () => {
 
   return (
     <SafetyProvider>
+      <VoiceListener />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/settings" element={<Settings />} />
