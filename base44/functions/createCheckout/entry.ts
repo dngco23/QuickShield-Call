@@ -4,8 +4,8 @@ const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
 const STRIPE_API_URL = 'https://api.stripe.com/v1';
 
 const PRICE_IDS = {
-  monthly: 'price_1TUwfc7bPxMfjxCSia1tdGvR',
-  yearly: 'price_1TUwfc7bPxMfjxCSYByFUrdz',
+  pro: 'price_1TUy1L7bPxMfjxCSMKEHCBQX',
+  plus: 'price_1TUy1L7bPxMfjxCScFfrQBIs',
 };
 
 Deno.serve(async (req) => {
@@ -30,19 +30,23 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { priceId = 'monthly' } = body;
+    const { priceId } = body;
+
+    if (!priceId || !PRICE_IDS[priceId]) {
+      return Response.json({ error: 'Invalid price ID' }, { status: 400 });
+    }
 
     const sessionParams = {
       customer_email: user.email,
       line_items: [
         {
-          price: PRICE_IDS[priceId] || PRICE_IDS.monthly,
+          price: PRICE_IDS[priceId],
           quantity: 1,
         },
       ],
       mode: 'subscription',
-      success_url: `${origin}/settings?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/settings`,
+      success_url: `${origin}/pricing?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/pricing`,
       metadata: {
         base44_app_id: Deno.env.get('BASE44_APP_ID'),
         user_email: user.email,
@@ -76,7 +80,7 @@ Deno.serve(async (req) => {
     }
 
     const session = await response.json();
-    return Response.json({ checkoutUrl: session.url });
+    return Response.json({ sessionUrl: session.url });
   } catch (error) {
     console.error('Checkout error:', error);
     return Response.json({ error: error.message }, { status: 500 });

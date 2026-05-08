@@ -96,6 +96,20 @@ export default function Home() {
         <WellnessCards />
         <QuickActions />
 
+        {/* Upgrade Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.42 }}
+          className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-2xl p-4"
+        >
+          <p className="text-sm text-foreground font-medium mb-2">Unlock Premium Features</p>
+          <p className="text-xs text-muted-foreground mb-3">Get advanced safety features with Pro or Plus plans.</p>
+          <Link to="/pricing" className="text-xs font-medium text-primary hover:underline">
+            View Pricing Plans →
+          </Link>
+        </motion.div>
+
         {/* Quick Actions */}
         <div className="grid grid-cols-3 gap-3">
           <motion.button
