@@ -173,12 +173,14 @@ export default function Zones() {
 
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">Click on map to set location</Label>
-              <div className="h-64 rounded-lg overflow-hidden border border-border">
+              <div className="h-64 rounded-lg overflow-hidden border border-border bg-muted flex">
                 <MapContainer
+                  key={`${mapCenter[0]}-${mapCenter[1]}`}
                   center={mapCenter}
                   zoom={16}
-                  style={{ height: '100%', width: '100%' }}
+                  style={{ height: '100%', width: '100%', display: 'flex', flex: 1 }}
                   onClick={handleMapClick}
+                  className="flex-1"
                 >
                   <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
