@@ -26,8 +26,8 @@ const PLANS = [
     id: 'pro',
     name: 'Pro',
     price: 4.99,
-    priceId: 'price_1TUy357bPxMfjxCSzdfB8yPw',
-    productId: 'prod_UTvsQDHeKJHOBw',
+    priceId: 'price_1TUyGNCmyrIA0G168vckB106',
+    productId: 'prod_UTw8VgUlSWk5yO',
     description: 'Advanced safety monitoring',
     features: [
       'Everything in Free, plus:',
@@ -45,8 +45,8 @@ const PLANS = [
     id: 'plus',
     name: 'Plus',
     price: 9.99,
-    priceId: 'price_1TUy357bPxMfjxCSn7B6o4HM',
-    productId: 'prod_UTvsktMsHYmlZt',
+    priceId: 'price_1TUyGNCmyrIA0G160Gt08D8q',
+    productId: 'prod_UTw8iPGl2IjJd8',
     description: 'Complete safety ecosystem',
     features: [
       'Everything in Pro, plus:',

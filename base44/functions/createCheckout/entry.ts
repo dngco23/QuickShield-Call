@@ -4,8 +4,8 @@ const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
 const STRIPE_API_URL = 'https://api.stripe.com/v1';
 
 const PRICE_IDS = {
-  pro: 'price_1TUy357bPxMfjxCSzdfB8yPw',
-  plus: 'price_1TUy357bPxMfjxCSn7B6o4HM',
+  pro: 'price_1TUyGNCmyrIA0G168vckB106',
+  plus: 'price_1TUyGNCmyrIA0G160Gt08D8q',
 };
 
 Deno.serve(async (req) => {
