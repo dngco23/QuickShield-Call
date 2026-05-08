@@ -1,0 +1,56 @@
+{
+  "name": "LinkedAccount",
+  "type": "object",
+  "properties": {
+    "parent_email": {
+      "type": "string",
+      "description": "Email of the parent account"
+    },
+    "child_email": {
+      "type": "string",
+      "description": "Email of the child account to monitor"
+    },
+    "child_name": {
+      "type": "string",
+      "description": "Display name for the child"
+    },
+    "link_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active"
+      ],
+      "default": "pending",
+      "description": "Status of the link (pending parent acceptance or active)"
+    },
+    "last_location": {
+      "type": "object",
+      "description": "Last known GPS location",
+      "properties": {
+        "latitude": {
+          "type": "number"
+        },
+        "longitude": {
+          "type": "number"
+        },
+        "timestamp": {
+          "type": "string"
+        }
+      }
+    },
+    "last_battery_level": {
+      "type": "number",
+      "description": "Last known battery percentage (0-100)"
+    },
+    "battery_low_alert": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to alert when battery is low"
+    }
+  },
+  "required": [
+    "parent_email",
+    "child_email",
+    "child_name"
+  ]
+}

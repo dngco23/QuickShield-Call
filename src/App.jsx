@@ -16,6 +16,7 @@ import Settings from '@/pages/Settings';
 import PanicMode from '@/pages/PanicMode';
 import EmergencyContacts from '@/pages/EmergencyContacts';
 import Zones from '@/pages/Zones';
+import ParentDashboard from '@/pages/ParentDashboard';
 import VoiceListener from '@/components/VoiceListener';
 import BatteryMonitor from '@/components/BatteryMonitor';
 import TrialBanner from '@/components/TrialBanner';
@@ -57,6 +58,7 @@ const AuthenticatedApp = () => {
         <Route path="/emergency-contacts" element={<EmergencyContacts />} />
         <Route path="/zones" element={<Zones />} />
         <Route path="/panic" element={<PanicMode />} />
+        <Route path="/parent-dashboard" element={<ParentDashboard />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </SafetyProvider>
