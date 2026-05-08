@@ -13,6 +13,7 @@ import FakeCallOverlay from '@/components/FakeCallOverlay';
 import HiddenSettings from '@/components/HiddenSettings';
 import SOSButton from '@/components/SOSButton';
 import CheckIn from '@/components/CheckIn';
+import AudioRecorder from '@/components/AudioRecorder';
 import { useSafety } from '@/lib/safetyContext.jsx';
 
 export default function Home() {
@@ -39,6 +40,7 @@ export default function Home() {
       <FakeCallOverlay />
       <HiddenSettings />
       <CheckIn />
+      <AudioRecorder />
 
       {/* Header */}
       <div className="px-5 pt-12 pb-4">

@@ -1,0 +1,38 @@
+{
+  "name": "Recording",
+  "type": "object",
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "sos",
+        "fake_call"
+      ],
+      "description": "Type of event that triggered the recording"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL to the uploaded audio file"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "description": "Duration of the recording in seconds"
+    },
+    "latitude": {
+      "type": "number",
+      "description": "GPS latitude at time of recording"
+    },
+    "longitude": {
+      "type": "number",
+      "description": "GPS longitude at time of recording"
+    },
+    "device_info": {
+      "type": "string",
+      "description": "User agent and device information"
+    }
+  },
+  "required": [
+    "event_type",
+    "file_url"
+  ]
+}
