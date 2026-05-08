@@ -15,6 +15,7 @@ import SOSButton from '@/components/SOSButton';
 import CheckIn from '@/components/CheckIn';
 import AudioRecorder from '@/components/AudioRecorder';
 import StealthMode from '@/components/StealthMode';
+import FamilyMembers from '@/components/FamilyMembers';
 import { useSafety } from '@/lib/safetyContext.jsx';
 
 export default function Home() {
@@ -140,11 +141,21 @@ export default function Home() {
           )}
         </motion.div>
 
+        {/* Family Members */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.47 }}
+          className="bg-card rounded-2xl border border-border/50 p-5"
+        >
+          <FamilyMembers />
+        </motion.div>
+
         {/* Subtle daily tip */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.47 }}
+          transition={{ delay: 0.48 }}
           className="bg-muted/30 rounded-2xl p-4 border border-border/30"
         >
           <p className="text-xs text-muted-foreground font-body leading-relaxed">

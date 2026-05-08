@@ -1,0 +1,36 @@
+{
+  "name": "FamilyMember",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Family member's name"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Family member's phone number"
+    },
+    "relationship": {
+      "type": "string",
+      "enum": [
+        "mother",
+        "father",
+        "sibling",
+        "partner",
+        "friend",
+        "other"
+      ],
+      "description": "Relationship to user"
+    },
+    "is_emergency_contact": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this member should receive SOS alerts"
+    }
+  },
+  "required": [
+    "name",
+    "phone",
+    "relationship"
+  ]
+}
