@@ -1,0 +1,38 @@
+{
+  "name": "PanicMessage",
+  "type": "object",
+  "properties": {
+    "from_user": {
+      "type": "string",
+      "description": "Email of the sender"
+    },
+    "to_user": {
+      "type": "string",
+      "description": "Phone number or email of the recipient"
+    },
+    "content": {
+      "type": "string",
+      "description": "Message content"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "incoming",
+        "outgoing"
+      ],
+      "description": "Direction of the message"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the message was sent"
+    }
+  },
+  "required": [
+    "from_user",
+    "to_user",
+    "content",
+    "direction",
+    "timestamp"
+  ]
+}

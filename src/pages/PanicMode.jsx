@@ -8,6 +8,7 @@ import { base44 } from '@/api/base44Client';
 import { useSafety } from '@/lib/safetyContext.jsx';
 import { useAudioRecorder } from '@/lib/useAudioRecorder';
 import { Button } from '@/components/ui/button';
+import PanicMessaging from '@/components/PanicMessaging';
 
 // Fix leaflet default icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -342,6 +343,13 @@ export default function PanicMode() {
             </>
           )}
         </Button>
+
+        {/* Encrypted Messaging */}
+        <PanicMessaging
+          emergencyContact={user?.emergencyContactNumber}
+          emergencyName={user?.emergencyContactName}
+          isVisible={!!user?.emergencyContactNumber}
+        />
 
         {!user?.emergencyContactNumber && (
           <p className="text-xs text-destructive text-center">
