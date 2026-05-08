@@ -181,9 +181,8 @@ export default function Zones() {
                   onClick={handleMapClick}
                 >
                   <TileLayer
-                    url={isAndroid() ? 'https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}' : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'}
-                    subdomains={isAndroid() ? ['mt0', 'mt1', 'mt2', 'mt3'] : ['a', 'b', 'c']}
-                    attribution={isAndroid() ? '&copy; Google Maps' : '&copy; OpenStreetMap contributors'}
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; OpenStreetMap contributors'
                   />
                   {formData.latitude && formData.longitude && (
                     <>
