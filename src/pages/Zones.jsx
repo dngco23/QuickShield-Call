@@ -8,6 +8,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { isAndroid, isIOS } from '@/lib/deviceDetect';
 
 // Fix leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -172,31 +173,52 @@ export default function Zones() {
 
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">Click on map to set location</Label>
-              <div className="h-64 rounded-lg overflow-hidden border border-border">
-                <MapContainer
-                  center={mapCenter}
-                  zoom={16}
-                  style={{ height: '100%', width: '100%' }}
-                  onClick={handleMapClick}
-                >
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; OpenStreetMap contributors'
+              <div className="h-64 rounded-lg overflow-hidden border border-border bg-muted">
+                {isAndroid() ? (
+                  <iframe
+                    src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyDxs3vqCBxh6RlPjFblTkGLZwmPZqG2ohs&q=${mapCenter[0]},${mapCenter[1]}&zoom=16`}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                    allowFullScreen=""
+                    loading="lazy"
                   />
-                  {formData.latitude && formData.longitude && (
-                    <>
-                      <Marker position={[formData.latitude, formData.longitude]}>
-                        <Popup>{formData.name || 'Zone'}</Popup>
-                      </Marker>
-                      <Circle
-                        center={[formData.latitude, formData.longitude]}
-                        radius={formData.radius_meters}
-                        pathOptions={{ color: 'blue', fillOpacity: 0.2 }}
-                      />
-                    </>
-                  )}
-                </MapContainer>
+                ) : isIOS() ? (
+                  <iframe
+                    src={`https://maps.apple.com/?q=${mapCenter[0]},${mapCenter[1]}&z=16`}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                    allowFullScreen=""
+                    loading="lazy"
+                  />
+                ) : (
+                  <MapContainer
+                    center={mapCenter}
+                    zoom={16}
+                    style={{ height: '100%', width: '100%' }}
+                    onClick={handleMapClick}
+                  >
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; OpenStreetMap contributors'
+                    />
+                    {formData.latitude && formData.longitude && (
+                      <>
+                        <Marker position={[formData.latitude, formData.longitude]}>
+                          <Popup>{formData.name || 'Zone'}</Popup>
+                        </Marker>
+                        <Circle
+                          center={[formData.latitude, formData.longitude]}
+                          radius={formData.radius_meters}
+                          pathOptions={{ color: 'blue', fillOpacity: 0.2 }}
+                        />
+                      </>
+                    )}
+                  </MapContainer>
+                )}
               </div>
+              {(isAndroid() || isIOS()) && (
+                <p className="text-xs text-muted-foreground">
+                  Tap the map or use your device's default {isAndroid() ? 'Google Maps' : 'Apple Maps'} to set location
+                </p>
+              )}
             </div>
 
             <div className="flex gap-2">
