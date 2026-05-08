@@ -9,6 +9,8 @@ import { SafetyProvider } from '@/lib/safetyContext.jsx';
 import { TrialProvider } from '@/lib/trialContext';
 import { PowerSaveProvider } from '@/lib/powerSaveContext';
 import Home from '@/pages/Home';
+import Journal from '@/pages/Journal';
+import Insights from '@/pages/Insights';
 import { useState } from 'react';
 import Settings from '@/pages/Settings';
 import PanicMode from '@/pages/PanicMode';
@@ -45,6 +47,8 @@ const AuthenticatedApp = () => {
       <BatteryMonitor />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/journal" element={<Journal />} />
+        <Route path="/insights" element={<Insights />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/panic" element={<PanicMode />} />
         <Route path="*" element={<PageNotFound />} />

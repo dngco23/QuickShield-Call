@@ -1,14 +1,16 @@
 import React from 'react';
 import { Home, BookOpen, BarChart3, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useSafety } from '@/lib/safetyContext.jsx';
 
 export default function BottomNav() {
+  const navigate = useNavigate();
   const { setShowSettings } = useSafety();
   const [settingsTapCount, setSettingsTapCount] = React.useState(0);
   const settingsTapTimer = React.useRef(null);
 
-  // Triple tap the "Insights" icon to open hidden settings
-  const handleInsightsTap = () => {
+  // Triple tap the "Journal" icon to open hidden settings
+  const handleJournalTap = () => {
     setSettingsTapCount((prev) => {
       const newCount = prev + 1;
       clearTimeout(settingsTapTimer.current);
@@ -27,9 +29,9 @@ export default function BottomNav() {
   };
 
   const items = [
-    { icon: Home, label: "Home", active: true, onClick: () => {} },
-    { icon: BookOpen, label: "Journal", active: false, onClick: () => {} },
-    { icon: BarChart3, label: "Insights", active: false, onClick: handleInsightsTap },
+    { icon: Home, label: "Home", active: true, onClick: () => navigate('/') },
+    { icon: BookOpen, label: "Journal", active: false, onClick: () => { handleJournalTap(); navigate('/journal'); } },
+    { icon: BarChart3, label: "Insights", active: false, onClick: () => navigate('/insights') },
     { icon: Settings, label: "More", active: false, onClick: () => {} },
   ];
 
