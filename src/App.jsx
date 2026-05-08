@@ -10,6 +10,7 @@ import Home from '@/pages/Home';
 import Settings from '@/pages/Settings';
 import PanicMode from '@/pages/PanicMode';
 import VoiceListener from '@/components/VoiceListener';
+import BatteryMonitor from '@/components/BatteryMonitor';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -37,6 +38,7 @@ const AuthenticatedApp = () => {
   return (
     <SafetyProvider>
       <VoiceListener />
+      <BatteryMonitor />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/settings" element={<Settings />} />
