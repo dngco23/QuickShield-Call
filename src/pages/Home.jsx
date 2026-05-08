@@ -58,7 +58,7 @@ export default function Home() {
           <div>
             <p className="text-sm text-muted-foreground font-body">{greeting}</p>
             <h1 className="font-display text-2xl font-semibold text-foreground mt-0.5">
-              Bloom
+              Quickshield Call
             </h1>
           </div>
           <Link
