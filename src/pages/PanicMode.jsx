@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, AlertCircle, Send, Loader2, Mic, Upload } from 'lucide-react';
+import { ChevronLeft, AlertCircle, Send, Loader2, Mic, Upload, Wifi, WifiOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -29,6 +29,7 @@ export default function PanicMode() {
   const [isRecording, setIsRecording] = useState(false);
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
     const loadData = async () => {
@@ -41,6 +42,29 @@ export default function PanicMode() {
       setLoading(false);
     };
     loadData();
+  }, []);
+
+  // Register service worker for offline map caching
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js').catch(() => {
+        // Service worker registration failed, offline maps unavailable
+      });
+    }
+  }, []);
+
+  // Monitor online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   // Start recording on panic mode enter
@@ -172,18 +196,38 @@ export default function PanicMode() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-3 px-5 pt-4 pb-3 border-b border-border/50"
+        className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 border-b border-border/50"
       >
-        <button
-          onClick={() => navigate('/')}
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-        >
-          <ChevronLeft className="w-6 h-6 text-foreground" />
-        </button>
         <div className="flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-destructive" />
-          <h1 className="font-display text-xl font-semibold text-foreground">Panic Mode</h1>
+          <button
+            onClick={() => navigate('/')}
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
+          >
+            <ChevronLeft className="w-6 h-6 text-foreground" />
+          </button>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-destructive" />
+            <h1 className="font-display text-xl font-semibold text-foreground">Panic Mode</h1>
+          </div>
         </div>
+        <motion.div
+          animate={{ opacity: isOnline ? 1 : 0.6 }}
+          className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-body ${
+            isOnline ? 'text-accent-foreground bg-accent/20' : 'text-muted-foreground bg-muted/50'
+          }`}
+        >
+          {isOnline ? (
+            <>
+              <Wifi className="w-3 h-3" />
+              <span>Online</span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="w-3 h-3" />
+              <span>Offline (Cached Maps)</span>
+            </>
+          )}
+        </motion.div>
       </motion.div>
 
       {/* Map */}
