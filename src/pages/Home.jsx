@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { Settings as SettingsIcon, Phone } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Settings as SettingsIcon, Phone, AlertTriangle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import SearchBar from '@/components/wellness/SearchBar';
 import QuoteWidget from '@/components/wellness/QuoteWidget';
@@ -18,6 +18,7 @@ import StealthMode from '@/components/StealthMode';
 import { useSafety } from '@/lib/safetyContext.jsx';
 
 export default function Home() {
+  const navigate = useNavigate();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const { settings, startCheckIn, stealthMode } = useSafety();
@@ -79,7 +80,7 @@ export default function Home() {
         <QuickActions />
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -104,13 +105,25 @@ export default function Home() {
               <span className="font-body font-medium text-foreground text-sm">Check-In</span>
             </div>
           </motion.button>
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            onClick={() => navigate('/panic')}
+            className="bg-gradient-to-r from-destructive/20 to-destructive/10 border border-destructive/30 rounded-2xl p-4 hover:from-destructive/30 hover:to-destructive/20 transition-all active:scale-98"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-destructive" />
+              <span className="font-body font-medium text-foreground text-sm">Panic</span>
+            </div>
+          </motion.button>
         </div>
         
         {/* SOS Button */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
+          transition={{ delay: 0.46 }}
           className="bg-red-50 border border-red-100 rounded-2xl p-5"
         >
           <p className="text-xs font-medium text-red-400 uppercase tracking-wider text-center mb-4">Emergency SOS</p>
@@ -129,7 +142,7 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.47 }}
           className="bg-muted/30 rounded-2xl p-4 border border-border/30"
         >
           <p className="text-xs text-muted-foreground font-body leading-relaxed">

@@ -8,6 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { SafetyProvider } from '@/lib/safetyContext.jsx';
 import Home from '@/pages/Home';
 import Settings from '@/pages/Settings';
+import PanicMode from '@/pages/PanicMode';
 import VoiceListener from '@/components/VoiceListener';
 
 const AuthenticatedApp = () => {
@@ -39,6 +40,7 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/panic" element={<PanicMode />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </SafetyProvider>
