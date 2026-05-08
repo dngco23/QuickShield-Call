@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Settings as SettingsIcon, Phone, AlertTriangle } from 'lucide-react';
+import { Settings as SettingsIcon, Phone, AlertTriangle, Shield } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import SearchBar from '@/components/wellness/SearchBar';
 import QuoteWidget from '@/components/wellness/QuoteWidget';
@@ -62,12 +62,21 @@ export default function Home() {
               Quickshield Call
             </h1>
           </div>
-          <Link
-            to="/settings"
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center hover:opacity-80 transition-opacity"
-          >
-            <SettingsIcon className="w-5 h-5 text-primary" />
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              to="/parent-dashboard"
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary/20 to-primary/20 flex items-center justify-center hover:opacity-80 transition-opacity"
+              title="Parental Controls"
+            >
+              <Shield className="w-5 h-5 text-secondary-foreground" />
+            </Link>
+            <Link
+              to="/settings"
+              className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center hover:opacity-80 transition-opacity"
+            >
+              <SettingsIcon className="w-5 h-5 text-primary" />
+            </Link>
+          </div>
         </motion.div>
 
         <SearchBar />
