@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { getCountryOptions, getDefaultNumberForCountry } from '@/lib/countryNumbers';
+import PrivacyPurge from '@/components/PrivacyPurge';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ export default function Settings() {
     emergencyContact1Number: '',
     emergencyContact2Name: '',
     emergencyContact2Number: '',
+    privacyPurgePin: '',
+    privacyPurgeDays: 30,
     country: 'AU',
   });
   const [loading, setLoading] = useState(true);
@@ -39,6 +42,8 @@ export default function Settings() {
           emergencyContact1Number: currentUser.emergencyContact1Number || '',
           emergencyContact2Name: currentUser.emergencyContact2Name || '',
           emergencyContact2Number: currentUser.emergencyContact2Number || '',
+          privacyPurgePin: currentUser.privacyPurgePin || '',
+          privacyPurgeDays: currentUser.privacyPurgeDays || 30,
           country: currentUser.country || 'AU',
         });
       } catch (error) {
@@ -58,6 +63,8 @@ export default function Settings() {
         emergencyContact1Number: form.emergencyContact1Number,
         emergencyContact2Name: form.emergencyContact2Name,
         emergencyContact2Number: form.emergencyContact2Number,
+        privacyPurgePin: form.privacyPurgePin,
+        privacyPurgeDays: form.privacyPurgeDays,
         country: form.country,
       });
       setSaved(true);
@@ -172,6 +179,46 @@ export default function Settings() {
               <p className="text-xs text-accent-foreground/70 font-body">
                 💡 Your emergency contacts will receive SMS alerts with your GPS location when you activate SOS. Both contacts will be available in Panic Mode messaging.
               </p>
+            </div>
+
+            <PrivacyPurge 
+              privacyPurgePin={form.privacyPurgePin}
+              privacyPurgeDays={form.privacyPurgeDays}
+            />
+
+            <div className="border-t border-border/50 pt-5">
+              <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">Privacy Settings</p>
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground">Privacy PIN (4-6 digits)</Label>
+                  <Input
+                    type="password"
+                    value={form.privacyPurgePin}
+                    onChange={(e) => setForm({ ...form, privacyPurgePin: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                    placeholder="••••"
+                    maxLength={6}
+                    className="bg-muted/50 tracking-widest text-center"
+                  />
+                  <p className="text-xs text-muted-foreground">Required to immediately purge all logs</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground">Auto-Purge After (days)</Label>
+                  <Select value={form.privacyPurgeDays.toString()} onValueChange={(value) => setForm({ ...form, privacyPurgeDays: parseInt(value) })}>
+                    <SelectTrigger className="bg-muted/50">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="7">7 days</SelectItem>
+                      <SelectItem value="14">14 days</SelectItem>
+                      <SelectItem value="30">30 days</SelectItem>
+                      <SelectItem value="60">60 days</SelectItem>
+                      <SelectItem value="90">90 days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">Old logs will be automatically deleted</p>
+                </div>
+              </div>
             </div>
           </div>
 
