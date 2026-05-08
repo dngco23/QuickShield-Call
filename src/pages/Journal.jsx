@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Plus, BookOpen } from 'lucide-react';
+import { ArrowLeft, Plus, BookOpen, Mic, MicOff, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -10,6 +10,8 @@ export default function Journal() {
   const [showForm, setShowForm] = useState(false);
   const [newEntry, setNewEntry] = useState('');
   const [mood, setMood] = useState('neutral');
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
 
   const moods = [
     { emoji: '😔', label: 'Low', value: 'low' },
@@ -17,6 +19,48 @@ export default function Journal() {
     { emoji: '😊', label: 'Good', value: 'good' },
     { emoji: '🤗', label: 'Great', value: 'great' },
   ];
+
+  useEffect(() => {
+    // Initialize Web Speech API
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+
+      recognitionRef.current.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setNewEntry((prev) => prev + transcript);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert('Speech recognition not supported in your browser');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
 
   const handleAddEntry = () => {
     if (!newEntry.trim()) return;
@@ -97,13 +141,39 @@ export default function Journal() {
               </div>
             </div>
 
-            <textarea
-              value={newEntry}
-              onChange={(e) => setNewEntry(e.target.value)}
-              placeholder="Write your thoughts..."
-              maxLength={500}
-              className="w-full h-24 px-3 py-2 bg-muted border border-border rounded-lg text-foreground placeholder:text-muted-foreground text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
+            <div className="space-y-2">
+              <textarea
+                value={newEntry}
+                onChange={(e) => setNewEntry(e.target.value)}
+                placeholder="Write your thoughts... or tap the microphone to dictate"
+                maxLength={500}
+                className="w-full h-24 px-3 py-2 bg-muted border border-border rounded-lg text-foreground placeholder:text-muted-foreground text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+              <div className="flex items-center gap-2">
+                <motion.button
+                  onClick={toggleListening}
+                  animate={isListening ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+                  transition={{ duration: 1, repeat: isListening ? Infinity : 0 }}
+                  className={`p-2 rounded-lg transition-all ${
+                    isListening
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                  }`}
+                  title="Tap to dictate"
+                >
+                  {isListening ? (
+                    <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.6, repeat: Infinity }}>
+                      <Mic className="w-4 h-4" />
+                    </motion.div>
+                  ) : (
+                    <MicOff className="w-4 h-4" />
+                  )}
+                </motion.button>
+                <span className="text-xs text-muted-foreground font-body">
+                  {isListening ? 'Listening...' : 'Tap mic to record'} • {newEntry.length}/500
+                </span>
+              </div>
+            </div>
 
             <div className="flex gap-2">
               <Button
