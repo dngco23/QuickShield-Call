@@ -1,5 +1,5 @@
 export const COUNTRIES = {
-  AU: { name: 'Australia', code: '+61', example: '+61 2 1234 5678' },
+  AU: { name: 'Australia', code: '+61', example: '+61 4 1234 5678' },
   US: { name: 'United States', code: '+1', example: '+1 (555) 012-3456' },
   CA: { name: 'Canada', code: '+1', example: '+1 (555) 012-3456' },
   GB: { name: 'United Kingdom', code: '+44', example: '+44 20 1234 5678' },
