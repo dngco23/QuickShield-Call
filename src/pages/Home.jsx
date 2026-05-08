@@ -25,7 +25,6 @@ export default function Home() {
   const { settings, startCheckIn, stealthMode } = useSafety();
   const [user, setUser] = useState(null);
   const { triggerCall } = useSafety();
-  const [triggeringSOSFromTop, setTriggeringSOSFromTop] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -64,18 +63,25 @@ export default function Home() {
             </h1>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => window.sosButtonRef?.click()}
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500/20 to-red-600/20 border border-red-500/30 flex items-center justify-center hover:opacity-80 transition-opacity"
+              title="Quick SOS"
+            >
+              <ShieldAlert className="w-4 h-4 text-red-500" />
+            </button>
             <Link
               to="/parent-dashboard"
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary/20 to-primary/20 flex items-center justify-center hover:opacity-80 transition-opacity"
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary/20 to-primary/20 flex items-center justify-center hover:opacity-80 transition-opacity"
               title="Parental Controls"
             >
-              <Shield className="w-5 h-5 text-secondary-foreground" />
+              <Shield className="w-4 h-4 text-secondary-foreground" />
             </Link>
             <Link
               to="/settings"
-              className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center hover:opacity-80 transition-opacity"
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-accent flex items-center justify-center hover:opacity-80 transition-opacity"
             >
-              <SettingsIcon className="w-5 h-5 text-primary" />
+              <SettingsIcon className="w-4 h-4 text-primary" />
             </Link>
           </div>
         </motion.div>
@@ -91,7 +97,7 @@ export default function Home() {
         <QuickActions />
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -128,48 +134,28 @@ export default function Home() {
               <span className="font-body font-medium text-foreground text-sm">Panic</span>
             </div>
           </motion.button>
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.46 }}
-            onClick={() => setTriggeringSOSFromTop(!triggeringSOSFromTop)}
-            className="bg-gradient-to-r from-red-500/20 to-red-600/20 border border-red-500/30 rounded-2xl p-4 hover:from-red-500/30 hover:to-red-600/30 transition-all active:scale-98"
-          >
-            <div className="flex items-center justify-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-red-500" />
-              <span className="font-body font-medium text-foreground text-sm">SOS</span>
-            </div>
-          </motion.button>
         </div>
         
-        {/* SOS Button - Show only when triggered from top */}
-        {triggeringSOSFromTop && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.46 }}
-            className="bg-red-50 border border-red-100 rounded-2xl p-5"
-          >
-            <p className="text-xs font-medium text-red-400 uppercase tracking-wider text-center mb-4">Emergency SOS</p>
-            <SOSButton
-              emergencyContact1={user?.emergencyContact1Number}
-              emergencyName1={user?.emergencyContact1Name}
-              emergencyContact2={user?.emergencyContact2Number}
-              emergencyName2={user?.emergencyContact2Name}
-            />
-            {!user?.emergencyContact1Number && !user?.emergencyContact2Number && (
-              <Link to="/settings" className="text-xs text-red-400/70 text-center mt-3 font-body hover:text-red-400 transition-colors block">
-                Set emergency contacts in Settings
-              </Link>
-            )}
-            <motion.button
-              onClick={() => setTriggeringSOSFromTop(false)}
-              className="w-full mt-3 px-3 py-2 text-xs text-red-600 hover:bg-red-100/50 rounded-lg transition-colors"
-            >
-              Close
-            </motion.button>
-          </motion.div>
-        )}
+        {/* SOS Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.46 }}
+          className="bg-red-50 border border-red-100 rounded-2xl p-5"
+        >
+          <p className="text-xs font-medium text-red-400 uppercase tracking-wider text-center mb-4">Emergency SOS</p>
+          <SOSButton
+            emergencyContact1={user?.emergencyContact1Number}
+            emergencyName1={user?.emergencyContact1Name}
+            emergencyContact2={user?.emergencyContact2Number}
+            emergencyName2={user?.emergencyContact2Name}
+          />
+          {!user?.emergencyContact1Number && !user?.emergencyContact2Number && (
+            <Link to="/settings" className="text-xs text-red-400/70 text-center mt-3 font-body hover:text-red-400 transition-colors block">
+              Set emergency contacts in Settings
+            </Link>
+          )}
+        </motion.div>
 
         {/* Family Members */}
         <motion.div
