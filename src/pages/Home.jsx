@@ -128,12 +128,14 @@ export default function Home() {
         >
           <p className="text-xs font-medium text-red-400 uppercase tracking-wider text-center mb-4">Emergency SOS</p>
           <SOSButton
-            emergencyContact={user?.emergencyContactNumber}
-            emergencyName={user?.emergencyContactName}
+            emergencyContact1={user?.emergencyContact1Number}
+            emergencyName1={user?.emergencyContact1Name}
+            emergencyContact2={user?.emergencyContact2Number}
+            emergencyName2={user?.emergencyContact2Name}
           />
-          {!user?.emergencyContactNumber && (
+          {!user?.emergencyContact1Number && !user?.emergencyContact2Number && (
             <Link to="/settings" className="text-xs text-red-400/70 text-center mt-3 font-body hover:text-red-400 transition-colors block">
-              Set an emergency contact in Settings
+              Set emergency contacts in Settings
             </Link>
           )}
         </motion.div>

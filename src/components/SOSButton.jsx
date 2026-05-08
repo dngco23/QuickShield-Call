@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 
 const HOLD_DURATION = 3000; // 3 seconds
 
-export default function SOSButton({ emergencyContact, emergencyName }) {
+export default function SOSButton({ emergencyContact1, emergencyName1, emergencyContact2, emergencyName2 }) {
   const [holding, setHolding] = useState(false);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('idle'); // idle | sending | sent | error
@@ -48,6 +48,13 @@ export default function SOSButton({ emergencyContact, emergencyName }) {
     setProgress(0);
     setStatus('sending');
 
+    if (!emergencyContact1 && !emergencyContact2) {
+      setStatus('error');
+      setStatusMessage('No emergency contacts set');
+      setTimeout(() => { setStatus('idle'); setStatusMessage(''); }, 4000);
+      return;
+    }
+
     // Get GPS location
     let locationText = 'Location unavailable';
     try {
@@ -59,12 +66,24 @@ export default function SOSButton({ emergencyContact, emergencyName }) {
     } catch (_) {}
 
     try {
-      await base44.functions.invoke('sendSOSSms', {
-        to: emergencyContact,
-        message: `🆘 SOS ALERT from your contact! They may need help.\nLocation: ${locationText}`,
-      });
+      const promises = [];
+      if (emergencyContact1) {
+        promises.push(base44.functions.invoke('sendSOSSms', {
+          to: emergencyContact1,
+          message: `🆘 SOS ALERT from your contact! They may need help.\nLocation: ${locationText}`,
+        }));
+      }
+      if (emergencyContact2) {
+        promises.push(base44.functions.invoke('sendSOSSms', {
+          to: emergencyContact2,
+          message: `🆘 SOS ALERT from your contact! They may need help.\nLocation: ${locationText}`,
+        }));
+      }
+      
+      await Promise.all(promises);
+      const contactCount = (emergencyContact1 ? 1 : 0) + (emergencyContact2 ? 1 : 0);
       setStatus('sent');
-      setStatusMessage(`SMS sent to ${emergencyName || emergencyContact}`);
+      setStatusMessage(`SMS sent to ${contactCount} contact${contactCount > 1 ? 's' : ''}`);
     } catch (err) {
       setStatus('error');
       setStatusMessage('Failed to send SMS. Check settings.');

@@ -19,8 +19,10 @@ export default function Settings() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [form, setForm] = useState({
-    emergencyContactName: '',
-    emergencyContactNumber: '',
+    emergencyContact1Name: '',
+    emergencyContact1Number: '',
+    emergencyContact2Name: '',
+    emergencyContact2Number: '',
     country: 'AU',
   });
   const [loading, setLoading] = useState(true);
@@ -33,8 +35,10 @@ export default function Settings() {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
         setForm({
-          emergencyContactName: currentUser.emergencyContactName || '',
-          emergencyContactNumber: currentUser.emergencyContactNumber || '',
+          emergencyContact1Name: currentUser.emergencyContact1Name || '',
+          emergencyContact1Number: currentUser.emergencyContact1Number || '',
+          emergencyContact2Name: currentUser.emergencyContact2Name || '',
+          emergencyContact2Number: currentUser.emergencyContact2Number || '',
           country: currentUser.country || 'AU',
         });
       } catch (error) {
@@ -50,8 +54,10 @@ export default function Settings() {
     setSaving(true);
     try {
       await base44.auth.updateMe({
-        emergencyContactName: form.emergencyContactName,
-        emergencyContactNumber: form.emergencyContactNumber,
+        emergencyContact1Name: form.emergencyContact1Name,
+        emergencyContact1Number: form.emergencyContact1Number,
+        emergencyContact2Name: form.emergencyContact2Name,
+        emergencyContact2Number: form.emergencyContact2Number,
         country: form.country,
       });
       setSaved(true);
@@ -88,7 +94,7 @@ export default function Settings() {
 
           <h1 className="font-display text-2xl font-semibold text-foreground mb-2">Settings</h1>
           <p className="text-sm text-muted-foreground font-body mb-6">
-            Manage your emergency contact for the SOS feature
+            Manage your emergency contacts for the SOS feature
           </p>
         </motion.div>
 
@@ -118,32 +124,53 @@ export default function Settings() {
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Contact Name</Label>
-              <Input
-                value={form.emergencyContactName}
-                onChange={(e) => setForm({ ...form, emergencyContactName: e.target.value })}
-                placeholder="e.g. Mom, Best Friend, Partner"
-                className="bg-muted/50"
-              />
+            <div className="border-b border-border/50 pb-5">
+              <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">Primary Contact</p>
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Name</Label>
+                <Input
+                  value={form.emergencyContact1Name}
+                  onChange={(e) => setForm({ ...form, emergencyContact1Name: e.target.value })}
+                  placeholder="e.g. Mom, Best Friend"
+                  className="bg-muted/50"
+                />
+              </div>
+              <div className="space-y-2 mt-3">
+                <Label className="text-sm text-muted-foreground">Phone Number</Label>
+                <Input
+                  value={form.emergencyContact1Number}
+                  onChange={(e) => setForm({ ...form, emergencyContact1Number: e.target.value })}
+                  placeholder="+1 (555) 012-3456"
+                  className="bg-muted/50"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Contact Phone Number</Label>
-              <Input
-                value={form.emergencyContactNumber}
-                onChange={(e) => setForm({ ...form, emergencyContactNumber: e.target.value })}
-                placeholder="+1 (555) 012-3456"
-                className="bg-muted/50"
-              />
-              <p className="text-xs text-muted-foreground">
-                This is where SOS alerts will be sent
-              </p>
+            <div>
+              <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">Secondary Contact</p>
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Name</Label>
+                <Input
+                  value={form.emergencyContact2Name}
+                  onChange={(e) => setForm({ ...form, emergencyContact2Name: e.target.value })}
+                  placeholder="e.g. Partner, Trusted Friend"
+                  className="bg-muted/50"
+                />
+              </div>
+              <div className="space-y-2 mt-3">
+                <Label className="text-sm text-muted-foreground">Phone Number</Label>
+                <Input
+                  value={form.emergencyContact2Number}
+                  onChange={(e) => setForm({ ...form, emergencyContact2Number: e.target.value })}
+                  placeholder="+1 (555) 012-3456"
+                  className="bg-muted/50"
+                />
+              </div>
             </div>
 
-            <div className="bg-accent/30 border border-accent rounded-xl p-4">
+            <div className="bg-accent/30 border border-accent rounded-xl p-4 mt-5">
               <p className="text-xs text-accent-foreground/70 font-body">
-                💡 Your emergency contact will receive an SMS with your GPS location when you activate SOS.
+                💡 Your emergency contacts will receive SMS alerts with your GPS location when you activate SOS. Both contacts will be available in Panic Mode messaging.
               </p>
             </div>
           </div>

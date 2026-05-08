@@ -74,27 +74,43 @@ export default function HiddenSettings() {
               </div>
 
               <div className="border-t border-border/50 pt-4 mt-1">
-                <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">SOS Emergency Contact</p>
+                <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">SOS Emergency Contacts</p>
                 <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Contact Name</Label>
-                    <Input
-                      value={form.emergencyContactName}
-                      onChange={(e) => setForm({ ...form, emergencyContactName: e.target.value })}
-                      placeholder="e.g. Mom, Best Friend"
-                      className="bg-muted/50"
-                    />
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium mb-2">Primary</p>
+                    <div className="space-y-2">
+                      <Input
+                        value={form.emergencyContact1Name}
+                        onChange={(e) => setForm({ ...form, emergencyContact1Name: e.target.value })}
+                        placeholder="e.g. Mom"
+                        className="bg-muted/50 text-xs"
+                      />
+                      <Input
+                        value={form.emergencyContact1Number}
+                        onChange={(e) => setForm({ ...form, emergencyContact1Number: e.target.value })}
+                        placeholder="+1 (555) 012-3456"
+                        className="bg-muted/50 text-xs"
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Contact Phone Number</Label>
-                    <Input
-                      value={form.emergencyContactNumber}
-                      onChange={(e) => setForm({ ...form, emergencyContactNumber: e.target.value })}
-                      placeholder="+1 (555) 012-3456"
-                      className="bg-muted/50"
-                    />
-                    <p className="text-xs text-muted-foreground">SOS SMS will be sent to this number</p>
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium mb-2">Secondary</p>
+                    <div className="space-y-2">
+                      <Input
+                        value={form.emergencyContact2Name}
+                        onChange={(e) => setForm({ ...form, emergencyContact2Name: e.target.value })}
+                        placeholder="e.g. Partner"
+                        className="bg-muted/50 text-xs"
+                      />
+                      <Input
+                        value={form.emergencyContact2Number}
+                        onChange={(e) => setForm({ ...form, emergencyContact2Number: e.target.value })}
+                        placeholder="+1 (555) 012-3456"
+                        className="bg-muted/50 text-xs"
+                      />
+                    </div>
                   </div>
+                  <p className="text-xs text-muted-foreground">SOS SMS will be sent to both contacts</p>
                 </div>
               </div>
 

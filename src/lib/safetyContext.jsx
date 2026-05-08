@@ -10,8 +10,10 @@ const DEFAULT_SETTINGS = {
   triggerWord: "lavender",
   callDelay: 3,
   autoDeclineSeconds: 0,
-  emergencyContactName: "",
-  emergencyContactNumber: "",
+  emergencyContact1Name: "",
+  emergencyContact1Number: "",
+  emergencyContact2Name: "",
+  emergencyContact2Number: "",
   voiceWakeWord: "",
   stealthModeType: "calculator",
 };

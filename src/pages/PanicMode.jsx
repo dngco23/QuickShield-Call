@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, AlertCircle, Send, Loader2, Mic, Upload, Wifi, WifiOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -345,15 +345,26 @@ export default function PanicMode() {
         </Button>
 
         {/* Encrypted Messaging */}
-        <PanicMessaging
-          emergencyContact={user?.emergencyContactNumber}
-          emergencyName={user?.emergencyContactName}
-          isVisible={!!user?.emergencyContactNumber}
-        />
+        <div className="space-y-3">
+          {user?.emergencyContact1Number && (
+            <PanicMessaging
+              emergencyContact={user.emergencyContact1Number}
+              emergencyName={user.emergencyContact1Name}
+              isVisible={true}
+            />
+          )}
+          {user?.emergencyContact2Number && (
+            <PanicMessaging
+              emergencyContact={user.emergencyContact2Number}
+              emergencyName={user.emergencyContact2Name}
+              isVisible={true}
+            />
+          )}
+        </div>
 
-        {!user?.emergencyContactNumber && (
+        {!user?.emergencyContact1Number && !user?.emergencyContact2Number && (
           <p className="text-xs text-destructive text-center">
-            Please set an emergency contact in Settings
+            Please set emergency contacts in Settings
           </p>
         )}
       </motion.div>
