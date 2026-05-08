@@ -14,6 +14,9 @@ export default function SOSButton({ emergencyContact1, emergencyName1, emergency
   const holdStart = useRef(null);
   const animFrame = useRef(null);
   const holdTimeout = useRef(null);
+  const mediaRecorder = useRef(null);
+  const audioChunks = useRef([]);
+  const recordingStartTime = useRef(null);
 
   const startHold = (e) => {
     e.preventDefault();
@@ -42,6 +45,62 @@ export default function SOSButton({ emergencyContact1, emergencyName1, emergency
     setProgress(0);
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder.current = new MediaRecorder(stream);
+      audioChunks.current = [];
+      recordingStartTime.current = Date.now();
+
+      mediaRecorder.current.ondataavailable = (event) => {
+        audioChunks.current.push(event.data);
+      };
+
+      mediaRecorder.current.start();
+    } catch (err) {
+      console.error('Failed to start recording:', err);
+    }
+  };
+
+  const stopAndUploadRecording = async (latitude, longitude) => {
+    return new Promise((resolve) => {
+      if (!mediaRecorder.current || mediaRecorder.current.state === 'inactive') {
+        resolve(null);
+        return;
+      }
+
+      mediaRecorder.current.onstop = async () => {
+        try {
+          const audioBlob = new Blob(audioChunks.current, { type: 'audio/wav' });
+          const duration = (Date.now() - recordingStartTime.current) / 1000;
+
+          // Upload file
+          const uploadRes = await base44.integrations.Core.UploadFile({
+            file: audioBlob,
+          });
+
+          // Create recording entity
+          await base44.entities.Recording.create({
+            event_type: 'sos',
+            file_url: uploadRes.file_url,
+            duration_seconds: Math.round(duration),
+            latitude,
+            longitude,
+            device_info: navigator.userAgent,
+          });
+
+          resolve(uploadRes.file_url);
+        } catch (err) {
+          console.error('Failed to upload recording:', err);
+          resolve(null);
+        }
+      };
+
+      mediaRecorder.current.stop();
+      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
+    });
+  };
+
   const triggerSOS = async () => {
     cancelAnimationFrame(animFrame.current);
     setHolding(false);
@@ -55,13 +114,19 @@ export default function SOSButton({ emergencyContact1, emergencyName1, emergency
       return;
     }
 
+    // Start silent recording
+    startRecording();
+
     // Get GPS location
+    let latitude = null;
+    let longitude = null;
     let locationText = 'Location unavailable';
     try {
       const pos = await new Promise((resolve, reject) =>
         navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
       );
-      const { latitude, longitude } = pos.coords;
+      latitude = pos.coords.latitude;
+      longitude = pos.coords.longitude;
       locationText = `https://maps.google.com/?q=${latitude},${longitude}`;
     } catch (_) {}
 
@@ -81,12 +146,16 @@ export default function SOSButton({ emergencyContact1, emergencyName1, emergency
       }
       
       await Promise.all(promises);
+
+      // Stop recording and upload after SMS sent
+      await stopAndUploadRecording(latitude, longitude);
+
       const contactCount = (emergencyContact1 ? 1 : 0) + (emergencyContact2 ? 1 : 0);
       setStatus('sent');
-      setStatusMessage(`SMS sent to ${contactCount} contact${contactCount > 1 ? 's' : ''}`);
+      setStatusMessage(`SOS sent to ${contactCount} contact${contactCount > 1 ? 's' : ''}`);
     } catch (err) {
       setStatus('error');
-      setStatusMessage('Failed to send SMS. Check settings.');
+      setStatusMessage('Failed to send SOS. Check settings.');
     }
 
     // Reset after 4s
@@ -99,6 +168,10 @@ export default function SOSButton({ emergencyContact1, emergencyName1, emergency
   useEffect(() => () => {
     cancelAnimationFrame(animFrame.current);
     clearTimeout(holdTimeout.current);
+    if (mediaRecorder.current && mediaRecorder.current.state === 'recording') {
+      mediaRecorder.current.stop();
+      mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
+    }
   }, []);
 
   const radius = 42;
