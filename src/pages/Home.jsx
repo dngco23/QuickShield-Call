@@ -12,12 +12,13 @@ import BottomNav from '@/components/wellness/BottomNav';
 import FakeCallOverlay from '@/components/FakeCallOverlay';
 import HiddenSettings from '@/components/HiddenSettings';
 import SOSButton from '@/components/SOSButton';
+import CheckIn from '@/components/CheckIn';
 import { useSafety } from '@/lib/safetyContext.jsx';
 
 export default function Home() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const { settings } = useSafety();
+  const { settings, startCheckIn } = useSafety();
   const [user, setUser] = useState(null);
   const { triggerCall } = useSafety();
 
@@ -37,6 +38,7 @@ export default function Home() {
     <div className="min-h-screen bg-background pb-24">
       <FakeCallOverlay />
       <HiddenSettings />
+      <CheckIn />
 
       {/* Header */}
       <div className="px-5 pt-12 pb-4">
@@ -69,19 +71,33 @@ export default function Home() {
         <WellnessCards />
         <QuickActions />
 
-        {/* Fake Call Button */}
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.43 }}
-          onClick={triggerCall}
-          className="w-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 rounded-2xl p-4 hover:from-primary/30 hover:to-accent/30 transition-all active:scale-98"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <Phone className="w-5 h-5 text-primary" />
-            <span className="font-body font-medium text-foreground">Fake Call</span>
-          </div>
-        </motion.button>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-3">
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.43 }}
+            onClick={triggerCall}
+            className="bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 rounded-2xl p-4 hover:from-primary/30 hover:to-accent/30 transition-all active:scale-98"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Phone className="w-4 h-4 text-primary" />
+              <span className="font-body font-medium text-foreground text-sm">Fake Call</span>
+            </div>
+          </motion.button>
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.44 }}
+            onClick={() => startCheckIn(15)}
+            className="bg-gradient-to-r from-secondary/40 to-primary/20 border border-secondary/40 rounded-2xl p-4 hover:from-secondary/50 hover:to-primary/30 transition-all active:scale-98"
+          >
+            <div className="flex flex-col items-center justify-center gap-1">
+              <span className="text-lg">🏠</span>
+              <span className="font-body font-medium text-foreground text-sm">Check-In</span>
+            </div>
+          </motion.button>
+        </div>
         
         {/* SOS Button */}
         <motion.div

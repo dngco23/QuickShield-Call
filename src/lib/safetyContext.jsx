@@ -20,6 +20,7 @@ export function SafetyProvider({ children }) {
     const saved = localStorage.getItem('_ws');
     return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
   });
+  const [activeCheckIn, setActiveCheckIn] = useState(null);
 
   const saveSettings = useCallback((newSettings) => {
     setSettings(newSettings);
@@ -37,6 +38,30 @@ export function SafetyProvider({ children }) {
     setShowCall(false);
   }, []);
 
+  const startCheckIn = useCallback((durationMinutes = 15) => {
+    const now = Date.now();
+    let lat, lng;
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        lat = position.coords.latitude;
+        lng = position.coords.longitude;
+      });
+    }
+
+    setActiveCheckIn({
+      startedAt: now,
+      expiresAt: now + durationMinutes * 60 * 1000,
+      durationMinutes,
+      lat,
+      lng,
+    });
+  }, []);
+
+  const cancelCheckIn = useCallback(() => {
+    setActiveCheckIn(null);
+  }, []);
+
   return (
     <SafetyContext.Provider value={{
       showCall,
@@ -46,6 +71,9 @@ export function SafetyProvider({ children }) {
       saveSettings,
       triggerCall,
       dismissCall,
+      activeCheckIn,
+      startCheckIn,
+      cancelCheckIn,
     }}>
       {children}
     </SafetyContext.Provider>
