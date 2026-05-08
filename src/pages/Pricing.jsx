@@ -25,8 +25,8 @@ const PLANS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 9.99,
-    priceId: 'price_pro_monthly',
+    price: 4.99,
+    priceId: 'price_1TUy357bPxMfjxCSzdfB8yPw',
     productId: 'prod_UTvsQDHeKJHOBw',
     description: 'Advanced safety monitoring',
     features: [
@@ -44,8 +44,8 @@ const PLANS = [
   {
     id: 'plus',
     name: 'Plus',
-    price: 19.99,
-    priceId: 'price_plus_monthly',
+    price: 9.99,
+    priceId: 'price_1TUy357bPxMfjxCSn7B6o4HM',
     productId: 'prod_UTvsktMsHYmlZt',
     description: 'Complete safety ecosystem',
     features: [
@@ -153,7 +153,7 @@ export default function Pricing() {
 
               <div className="mb-6">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-foreground">${plan.price}</span>
+                  <span className="text-4xl font-bold text-foreground">A${plan.price}</span>
                   {plan.price > 0 && <span className="text-muted-foreground">/month</span>}
                 </div>
               </div>
