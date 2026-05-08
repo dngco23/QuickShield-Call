@@ -1,0 +1,28 @@
+{
+  "name": "EmergencyContact",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Contact name (e.g., Mom, Partner)"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Contact phone number"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "primary",
+        "secondary",
+        "tertiary"
+      ],
+      "default": "secondary",
+      "description": "Contact priority level"
+    }
+  },
+  "required": [
+    "name",
+    "phone"
+  ]
+}

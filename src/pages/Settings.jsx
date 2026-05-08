@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Loader2, CheckCircle2, ChevronRight } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -181,6 +181,16 @@ export default function Settings() {
                 💡 Your emergency contacts will receive SMS alerts with your GPS location when you activate SOS. Both contacts will be available in Panic Mode messaging.
               </p>
             </div>
+
+            <Link to="/emergency-contacts" className="block mt-5 pt-5 border-t border-border/50">
+              <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Manage Emergency Contacts</p>
+                  <p className="text-xs text-muted-foreground mt-1">Add, edit, and organize contacts with priority levels</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              </div>
+            </Link>
 
             <PrivacyPurge 
               privacyPurgePin={form.privacyPurgePin}

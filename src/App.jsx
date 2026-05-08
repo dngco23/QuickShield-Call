@@ -14,6 +14,7 @@ import Insights from '@/pages/Insights';
 import { useState } from 'react';
 import Settings from '@/pages/Settings';
 import PanicMode from '@/pages/PanicMode';
+import EmergencyContacts from '@/pages/EmergencyContacts';
 import VoiceListener from '@/components/VoiceListener';
 import BatteryMonitor from '@/components/BatteryMonitor';
 import TrialBanner from '@/components/TrialBanner';
@@ -50,6 +51,7 @@ const AuthenticatedApp = () => {
         <Route path="/journal" element={<Journal />} />
         <Route path="/insights" element={<Insights />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/emergency-contacts" element={<EmergencyContacts />} />
         <Route path="/panic" element={<PanicMode />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
