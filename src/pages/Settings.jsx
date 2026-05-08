@@ -6,11 +6,23 @@ import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { getCountryOptions, getDefaultNumberForCountry } from '@/lib/countryNumbers';
 
 export default function Settings() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [form, setForm] = useState({ emergencyContactName: '', emergencyContactNumber: '' });
+  const [form, setForm] = useState({
+    emergencyContactName: '',
+    emergencyContactNumber: '',
+    country: 'AU',
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -23,6 +35,7 @@ export default function Settings() {
         setForm({
           emergencyContactName: currentUser.emergencyContactName || '',
           emergencyContactNumber: currentUser.emergencyContactNumber || '',
+          country: currentUser.country || 'AU',
         });
       } catch (error) {
         console.error('Failed to load user:', error);
@@ -39,6 +52,7 @@ export default function Settings() {
       await base44.auth.updateMe({
         emergencyContactName: form.emergencyContactName,
         emergencyContactNumber: form.emergencyContactNumber,
+        country: form.country,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -85,6 +99,25 @@ export default function Settings() {
           className="bg-card rounded-2xl border border-border/50 p-6 max-w-md"
         >
           <div className="space-y-5">
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Your Country</Label>
+              <Select value={form.country} onValueChange={(value) => setForm({ ...form, country: value })}>
+                <SelectTrigger className="bg-muted/50">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {getCountryOptions().map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                This sets the default caller number format for fake calls
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">Contact Name</Label>
               <Input

@@ -1,10 +1,12 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { getDefaultNumberForCountry } from './countryNumbers';
+import { base44 } from '@/api/base44Client';
 
 const SafetyContext = createContext();
 
 const DEFAULT_SETTINGS = {
   callerName: "Mom",
-  callerNumber: "+1 (555) 012-3456",
+  callerNumber: "+61 2 1234 5678",
   triggerWord: "lavender",
   callDelay: 3,
   autoDeclineSeconds: 0,
@@ -21,6 +23,24 @@ export function SafetyProvider({ children }) {
     return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
   });
   const [activeCheckIn, setActiveCheckIn] = useState(null);
+
+  useEffect(() => {
+    const syncCountry = async () => {
+      try {
+        const user = await base44.auth.me();
+        if (user?.country) {
+          const countryNumber = getDefaultNumberForCountry(user.country);
+          setSettings((prev) => ({
+            ...prev,
+            callerNumber: prev.callerNumber === DEFAULT_SETTINGS.callerNumber
+              ? countryNumber
+              : prev.callerNumber,
+          }));
+        }
+      } catch (_) {}
+    };
+    syncCountry();
+  }, []);
 
   const saveSettings = useCallback((newSettings) => {
     setSettings(newSettings);
