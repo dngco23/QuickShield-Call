@@ -3,16 +3,27 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, AlertCircle } from 'lucide-react';
 import { useVoiceRecognition } from '@/lib/useVoiceRecognition';
 import { useSafety } from '@/lib/safetyContext.jsx';
+import { useTrial } from '@/lib/trialContext';
+import PaywallOverlay from '@/components/PaywallOverlay';
 
 export default function VoiceListener() {
   const { settings, triggerSOS } = useSafety();
+  const { hasFeatureAccess } = useTrial();
   const [hasPermission, setHasPermission] = useState(null);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const handleWakeWordDetected = () => {
+    if (!hasFeatureAccess('voice_detection')) {
+      setShowPaywall(true);
+      return;
+    }
     triggerSOS();
   };
 
-  const { isListening, error } = useVoiceRecognition(settings.voiceWakeWord, handleWakeWordDetected);
+  const { isListening, error } = useVoiceRecognition(
+    hasFeatureAccess('voice_detection') ? settings.voiceWakeWord : '',
+    handleWakeWordDetected
+  );
 
   useEffect(() => {
     // Check microphone permission on mount
@@ -42,8 +53,15 @@ export default function VoiceListener() {
   }
 
   return (
-    <AnimatePresence>
-      {isListening && (
+    <>
+      {showPaywall && (
+        <PaywallOverlay
+          featureName="Voice Detection"
+          onClose={() => setShowPaywall(false)}
+        />
+      )}
+      <AnimatePresence>
+        {isListening && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -70,6 +88,7 @@ export default function VoiceListener() {
           <span>Microphone error</span>
         </motion.div>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   );
 }

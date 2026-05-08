@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Loader2, CheckCircle2, AlertTriangle, MapPin, Trash2 } from 'lucide-react';
+import { Download, Loader2, CheckCircle2, AlertTriangle, MapPin, Trash2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTrial } from '@/lib/trialContext';
+import PaywallOverlay from '@/components/PaywallOverlay';
 
 const TILE_CACHE_NAME = 'quickshield-map-tiles-v1';
 const SAFE_ZONES_DB = 'quickshield-db';
 
 export default function MapDownloader() {
+  const { hasFeatureAccess } = useTrial();
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [cacheSize, setCacheSize] = useState(0);
   const [safeZones, setSafeZones] = useState([]);
   const [newZoneName, setNewZoneName] = useState('');
   const [userLocation, setUserLocation] = useState(null);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   // Calculate offline cache size
   useEffect(() => {
@@ -179,9 +183,24 @@ export default function MapDownloader() {
     }
   };
 
+  const handleDownloadClick = () => {
+    if (!hasFeatureAccess('offline_maps')) {
+      setShowPaywall(true);
+      return;
+    }
+    downloadMapArea();
+  };
+
   return (
-    <div className="space-y-5">
-      <div className="border-t border-border/50 pt-5">
+    <>
+      {showPaywall && (
+        <PaywallOverlay
+          featureName="Offline Maps"
+          onClose={() => setShowPaywall(false)}
+        />
+      )}
+      <div className="space-y-5">
+        <div className="border-t border-border/50 pt-5">
         <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">Offline Maps</p>
 
         {/* Download status */}
@@ -219,18 +238,22 @@ export default function MapDownloader() {
         </div>
 
         {/* Download button */}
-        <Button
-          onClick={downloadMapArea}
-          disabled={downloading}
-          className="w-full mb-4 bg-primary hover:bg-primary/90"
-        >
-          {downloading ? (
-            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          ) : (
-            <Download className="w-4 h-4 mr-2" />
-          )}
-          {downloading ? 'Downloading...' : 'Download Local Maps'}
-        </Button>
+        <div className="relative">
+          <Button
+            onClick={handleDownloadClick}
+            disabled={downloading}
+            className="w-full mb-4 bg-primary hover:bg-primary/90"
+          >
+            {downloading ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : !hasFeatureAccess('offline_maps') ? (
+              <Lock className="w-4 h-4 mr-2" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            {downloading ? 'Downloading...' : !hasFeatureAccess('offline_maps') ? 'Offline Maps (Pro)' : 'Download Local Maps'}
+          </Button>
+        </div>
 
         {/* Safe zones */}
         <div className="border-t border-border/50 pt-4">
@@ -290,6 +313,7 @@ export default function MapDownloader() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

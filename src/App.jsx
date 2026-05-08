@@ -6,11 +6,13 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { SafetyProvider } from '@/lib/safetyContext.jsx';
+import { TrialProvider } from '@/lib/trialContext';
 import Home from '@/pages/Home';
 import Settings from '@/pages/Settings';
 import PanicMode from '@/pages/PanicMode';
 import VoiceListener from '@/components/VoiceListener';
 import BatteryMonitor from '@/components/BatteryMonitor';
+import TrialBanner from '@/components/TrialBanner';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -53,9 +55,11 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
+        <TrialProvider>
+          <Router>
+            <AuthenticatedApp />
+          </Router>
+        </TrialProvider>
         <Toaster />
       </QueryClientProvider>
     </AuthProvider>
