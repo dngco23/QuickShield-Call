@@ -25,6 +25,7 @@ export function SafetyProvider({ children }) {
   });
   const [activeCheckIn, setActiveCheckIn] = useState(null);
   const [stealthMode, setStealthMode] = useState(false);
+  const [panicModeActive, setPanicModeActive] = useState(false);
 
   useEffect(() => {
     const syncCountry = async () => {
@@ -121,6 +122,8 @@ export function SafetyProvider({ children }) {
       stealthMode,
       setStealthMode,
       triggerSOS,
+      panicModeActive,
+      setPanicModeActive,
     }}>
       {children}
     </SafetyContext.Provider>

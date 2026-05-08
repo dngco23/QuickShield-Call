@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, AlertCircle, Send, Loader2 } from 'lucide-react';
+import { ChevronLeft, AlertCircle, Send, Loader2, Mic, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { base44 } from '@/api/base44Client';
 import { useSafety } from '@/lib/safetyContext.jsx';
+import { useAudioRecorder } from '@/lib/useAudioRecorder';
 import { Button } from '@/components/ui/button';
 
 // Fix leaflet default icons
@@ -18,12 +19,16 @@ L.Icon.Default.mergeOptions({
 
 export default function PanicMode() {
   const navigate = useNavigate();
-  const { settings, activeCheckIn } = useSafety();
+  const { panicModeActive, setPanicModeActive } = useSafety();
+  const { startRecording, stopRecording } = useAudioRecorder();
   const [location, setLocation] = useState(null);
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -37,6 +42,17 @@ export default function PanicMode() {
     };
     loadData();
   }, []);
+
+  // Start recording on panic mode enter
+  useEffect(() => {
+    setPanicModeActive(true);
+    startRecording();
+    setIsRecording(true);
+
+    return () => {
+      setPanicModeActive(false);
+    };
+  }, [setPanicModeActive, startRecording]);
 
   useEffect(() => {
     if ('geolocation' in navigator) {
@@ -52,10 +68,69 @@ export default function PanicMode() {
     }
   }, []);
 
-  const handleStopRecording = () => {
-    // Recording is managed by AudioRecorder component
-    // This just provides UI feedback
-    alert('Recording stopped');
+  // Recording timer
+  useEffect(() => {
+    let interval;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingTime((t) => t + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleStopRecording = async () => {
+    setIsRecording(false);
+    const result = await stopRecording();
+    
+    if (result) {
+      // Ask if user wants to upload to emergency contact
+      const shouldUpload = window.confirm('Upload recording to emergency contact?');
+      if (shouldUpload && user?.emergencyContactNumber) {
+        await handleUploadRecording(result.blob);
+      }
+    }
+  };
+
+  const handleUploadRecording = async (blob) => {
+    if (!user?.emergencyContactNumber) {
+      alert('Emergency contact not set');
+      return;
+    }
+
+    setUploadingAudio(true);
+    try {
+      // Upload file
+      const fileRes = await base44.integrations.Core.UploadFile({
+        file: blob,
+      });
+
+      // Get secure signed URL
+      const signedUrlRes = await base44.integrations.Core.CreateFileSignedUrl({
+        file_uri: fileRes.file_url,
+        expires_in: 86400, // 24 hours
+      });
+
+      // Send SMS with secure link
+      const recordingLink = `Recording: ${signedUrlRes.signed_url}`;
+      await base44.functions.invoke('sendSOSSms', {
+        to: user.emergencyContactNumber,
+        message: `Emergency recording from ${user.full_name}:\n\n${recordingLink}\n\nLocation: ${location ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}` : 'Unavailable'}`
+      });
+
+      alert('Recording uploaded and link sent to emergency contact');
+    } catch (error) {
+      console.error('Failed to upload recording:', error);
+      alert('Failed to upload recording');
+    } finally {
+      setUploadingAudio(false);
+    }
   };
 
   const handleSendUpdate = async () => {
@@ -150,12 +225,37 @@ export default function PanicMode() {
         transition={{ delay: 0.2 }}
         className="bg-card border-t border-border/50 p-5 space-y-4"
       >
+        {/* Recording Status */}
+        {isRecording && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center gap-2 px-3 py-2 bg-destructive/10 border border-destructive/30 rounded-lg"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            >
+              <Mic className="w-4 h-4 text-destructive" />
+            </motion.div>
+            <span className="text-sm font-body text-destructive font-medium">Recording • {formatTime(recordingTime)}</span>
+          </motion.div>
+        )}
+
         {/* Stop Recording Button */}
         <Button
           onClick={handleStopRecording}
+          disabled={uploadingAudio}
           className="w-full bg-destructive hover:bg-destructive/90 text-destructive-foreground"
         >
-          Stop Recording
+          {uploadingAudio ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            'Stop Recording'
+          )}
         </Button>
 
         {/* Message Box */}

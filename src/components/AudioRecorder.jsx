@@ -4,17 +4,17 @@ import { useSafety } from '@/lib/safetyContext.jsx';
 import { base44 } from '@/api/base44Client';
 
 export default function AudioRecorder() {
-  const { showCall, activeCheckIn } = useSafety();
+  const { showCall, activeCheckIn, panicModeActive } = useSafety();
   const { startRecording, stopRecording } = useAudioRecorder();
   const recordingStartTimeRef = React.useRef(null);
 
   useEffect(() => {
-    // Start recording when SOS or Fake Call is triggered
-    if (showCall) {
+    // Start recording when SOS, Fake Call, or Panic Mode is triggered
+    if (showCall || panicModeActive) {
       startRecording();
       recordingStartTimeRef.current = Date.now();
     }
-  }, [showCall, startRecording]);
+  }, [showCall, panicModeActive, startRecording]);
 
   useEffect(() => {
     // Stop recording and upload when Fake Call is dismissed
@@ -37,8 +37,9 @@ export default function AudioRecorder() {
           lng = pos.coords.longitude;
         } catch (_) {}
 
+        const eventType = showCall ? 'fake_call' : 'sos';
         await base44.entities.Recording.create({
-          event_type: 'fake_call',
+          event_type: eventType,
           file_url: fileRes.file_url,
           duration_seconds: result.duration,
           latitude: lat,
@@ -50,11 +51,11 @@ export default function AudioRecorder() {
       }
     };
 
-    if (!showCall && recordingStartTimeRef.current) {
+    if (!showCall && !panicModeActive && recordingStartTimeRef.current) {
       recordingStartTimeRef.current = null;
       handleStopAndUpload();
     }
-  }, [showCall, stopRecording]);
+  }, [showCall, panicModeActive, stopRecording]);
 
   // Handle SOS recording
   useEffect(() => {
