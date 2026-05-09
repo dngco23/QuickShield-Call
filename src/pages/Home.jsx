@@ -17,6 +17,7 @@ import AudioRecorder from '@/components/AudioRecorder';
 import StealthMode from '@/components/StealthMode';
 import FamilyMembers from '@/components/FamilyMembers';
 import { useSafety } from '@/lib/safetyContext.jsx';
+import AdBanner from '@/components/AdBanner';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -180,6 +181,8 @@ export default function Home() {
         >
           <FamilyMembers />
         </motion.div>
+
+        <AdBanner className="rounded-2xl" />
 
         {/* Subtle daily tip */}
         <motion.div

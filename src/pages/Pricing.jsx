@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
+import AdBanner from '@/components/AdBanner';
 
 const PLANS = [
   {
@@ -195,6 +196,8 @@ export default function Pricing() {
             </motion.div>
           ))}
         </div>
+
+        <AdBanner className="rounded-2xl mb-4" />
 
         {/* Info Box */}
         <motion.div
