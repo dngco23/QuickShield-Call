@@ -17,6 +17,7 @@ import { getCountryOptions, getDefaultNumberForCountry } from '@/lib/countryNumb
 import PrivacyPurge from '@/components/PrivacyPurge';
 import MapDownloader from '@/components/MapDownloader';
 import SubscriptionCard from '@/components/SubscriptionCard';
+import VoiceCommandSetup from '@/components/VoiceCommandSetup';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -245,6 +246,10 @@ export default function Settings() {
             </div>
 
             <MapDownloader />
+
+            <div className="border-t border-border/50 pt-5">
+              <VoiceCommandSetup initialPhrase={user?.voiceCommandPhrase || ''} />
+            </div>
           </div>
 
           <Button

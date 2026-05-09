@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, AlertCircle, Send, Loader2, Mic, Wifi, WifiOff } from 'lucide-react';
+import { ChevronLeft, AlertCircle, Send, Loader2, Mic, Wifi, WifiOff, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -8,6 +8,7 @@ import { base44 } from '@/api/base44Client';
 import { useSafety } from '@/lib/safetyContext.jsx';
 import { usePowerSave } from '@/lib/powerSaveContext';
 import { useAudioRecorder } from '@/lib/useAudioRecorder';
+import { useHandsFreeVoiceCommand } from '@/lib/useHandsFreeVoiceCommand';
 import { Button } from '@/components/ui/button';
 import PanicMessaging from '@/components/PanicMessaging';
 
@@ -41,12 +42,30 @@ export default function PanicMode() {
   const [uploadingAudio, setUploadingAudio] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [voiceCommandActive, setVoiceCommandActive] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState(null);
+
+  const handleVoiceCommand = async (transcript) => {
+    setVoiceStatus({ type: 'detected', text: `Voice command detected: "${transcript}"` });
+    setTimeout(() => setVoiceStatus(null), 2000);
+    // Automatically send SOS message on voice command
+    await handleSendUpdate('Help me now');
+  };
+
+  const { isListening: voiceIsListening } = useHandsFreeVoiceCommand(
+    voiceCommandActive && user?.voiceCommandPhrase ? user.voiceCommandPhrase : null,
+    handleVoiceCommand
+  );
 
   useEffect(() => {
     const loadData = async () => {
       try {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
+        // Enable voice command if phrase is set
+        if (currentUser?.voiceCommandPhrase) {
+          setVoiceCommandActive(true);
+        }
       } catch (error) {
         console.error('Failed to load user:', error);
       }
@@ -303,6 +322,39 @@ export default function PanicMode() {
         transition={{ delay: 0.2 }}
         className="bg-card border-t border-border/50 p-5 space-y-4"
       >
+        {/* Voice Command Status */}
+        <AnimatePresence>
+          {user?.voiceCommandPhrase && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/30 rounded-lg"
+            >
+              <motion.div
+                animate={voiceIsListening ? { scale: [1, 1.15, 1] } : {}}
+                transition={{ duration: 1, repeat: voiceIsListening ? Infinity : 0 }}
+              >
+                <Volume2 className={`w-4 h-4 ${voiceIsListening ? 'text-primary' : 'text-muted-foreground'}`} />
+              </motion.div>
+              <span className="text-sm font-body font-medium text-primary">
+                {voiceIsListening ? '🎤 Listening for: ' : '🔇 Voice: '}
+                <span className="font-semibold">"{user.voiceCommandPhrase}"</span>
+              </span>
+            </motion.div>
+          )}
+
+          {voiceStatus && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-green-800"
+            >
+              <span className="text-sm font-body">✓ {voiceStatus.text}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Recording Status */}
         {isRecording && (
           <motion.div
