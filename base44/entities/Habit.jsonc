@@ -1,0 +1,88 @@
+{
+  "name": "Habit",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Name of the habit (e.g., Exercise, Meditate)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the habit"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Emoji or icon representation"
+    },
+    "color": {
+      "type": "string",
+      "enum": [
+        "red",
+        "orange",
+        "yellow",
+        "green",
+        "blue",
+        "purple",
+        "pink"
+      ],
+      "default": "blue",
+      "description": "Color theme for the habit"
+    },
+    "current_streak": {
+      "type": "number",
+      "default": 0,
+      "description": "Current consecutive days completed"
+    },
+    "longest_streak": {
+      "type": "number",
+      "default": 0,
+      "description": "Longest streak achieved"
+    },
+    "completion_dates": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "date"
+      },
+      "default": [],
+      "description": "Array of dates when habit was completed"
+    },
+    "weekly_completions": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "default": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "description": "Completion count for each day of the week (Sun-Sat)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the habit is currently being tracked"
+    },
+    "goal_frequency": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "multiple_times_daily"
+      ],
+      "default": "daily",
+      "description": "How often the habit should be completed"
+    },
+    "journalEntry": {
+      "type": "object",
+      "description": "Link to today's journal entry if it exists"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

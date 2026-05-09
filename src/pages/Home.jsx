@@ -20,6 +20,7 @@ import { useSafety } from '@/lib/safetyContext.jsx';
 import AdBanner from '@/components/AdBanner';
 import ActivityDashboard from '@/components/ActivityDashboard';
 import SafetyMapDashboard from '@/components/SafetyMapDashboard';
+import HabitTracker from '@/components/HabitTracker';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -173,6 +174,9 @@ export default function Home() {
             </Link>
           )}
         </motion.div>
+
+        {/* Habit Tracker */}
+        <HabitTracker />
 
         {/* Family Members */}
         <motion.div
