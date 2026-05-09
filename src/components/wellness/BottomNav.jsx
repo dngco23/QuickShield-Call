@@ -1,5 +1,6 @@
 import React from 'react';
 import { Home, BookOpen, BarChart3, Settings, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useSafety } from '@/lib/safetyContext.jsx';
 
@@ -51,6 +52,10 @@ export default function BottomNav() {
             <span className="text-[10px] font-body font-medium">{item.label}</span>
           </button>
         ))}
+      </div>
+      <div className="flex justify-center gap-5 mt-2 pt-2 border-t border-border/30">
+        <Link to="/about" className="text-[10px] text-muted-foreground hover:text-primary transition-colors font-body">About</Link>
+        <Link to="/contact" className="text-[10px] text-muted-foreground hover:text-primary transition-colors font-body">Contact</Link>
       </div>
     </div>
   );
