@@ -26,6 +26,11 @@
       "type": "boolean",
       "default": false,
       "description": "Whether this member should receive SOS alerts"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional notes about this family member",
+      "maxLength": 1000
     }
   },
   "required": [

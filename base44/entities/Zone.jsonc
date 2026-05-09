@@ -22,6 +22,11 @@
       "type": "boolean",
       "default": true,
       "description": "Whether this zone is actively monitored"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional notes about this zone",
+      "maxLength": 1000
     }
   },
   "required": [

@@ -29,6 +29,11 @@
     "device_info": {
       "type": "string",
       "description": "User agent and device information"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional notes about this recording",
+      "maxLength": 1000
     }
   },
   "required": [

@@ -46,6 +46,11 @@
       "type": "boolean",
       "default": false,
       "description": "Whether to alert when battery is low"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional notes about this linked account",
+      "maxLength": 1000
     }
   },
   "required": [

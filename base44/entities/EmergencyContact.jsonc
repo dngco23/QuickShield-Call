@@ -19,6 +19,11 @@
       ],
       "default": "secondary",
       "description": "Contact priority level"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional notes about this contact",
+      "maxLength": 1000
     }
   },
   "required": [
