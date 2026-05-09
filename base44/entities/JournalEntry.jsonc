@@ -1,0 +1,36 @@
+{
+  "name": "JournalEntry",
+  "type": "object",
+  "properties": {
+    "content": {
+      "type": "string",
+      "description": "The journal entry text"
+    },
+    "mood": {
+      "type": "string",
+      "description": "User's mood emoji or label"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the journal entry"
+    }
+  },
+  "required": [
+    "content"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}
