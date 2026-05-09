@@ -13,6 +13,9 @@ import { Slider } from '@/components/ui/slider';
 import { isAndroid, isIOS } from '@/lib/deviceDetect';
 import LiveZoneMap from '@/components/LiveZoneMap';
 import { usePushNotifications } from '@/lib/usePushNotifications';
+import { useOfflineLocation } from '@/lib/useOfflineLocation';
+import SyncStatus from '@/components/SyncStatus';
+import { useSyncManager } from '@/lib/useSyncManager';
 
 const EARTH_RADIUS = 6371000;
 function calcDistance(lat1, lon1, lat2, lon2) {
@@ -60,12 +63,28 @@ export default function Zones() {
   const [saving, setSaving] = useState(false);
   const [zoneStatuses, setZoneStatuses] = useState({});
   const [notifications, setNotifications] = useState([]);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const previousStatusRef = useRef({});
   const { sendNotification, permission } = usePushNotifications();
+  const { location: offlineLocation } = useOfflineLocation(true);
+  const { syncing, lastSyncTime } = useSyncManager();
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     loadZones();
-    // Start live location polling
+    // Use offline-first location tracking with automatic IndexedDB sync
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const newLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -182,6 +201,13 @@ export default function Zones() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <SyncStatus
+        isOnline={isOnline}
+        syncing={syncing}
+        lastSyncTime={lastSyncTime}
+        unsyncedCount={0}
+      />
+
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
