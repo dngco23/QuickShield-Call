@@ -21,6 +21,7 @@ import Pricing from '@/pages/Pricing';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import VoiceListener from '@/components/VoiceListener';
+import VoiceCommandListener from '@/components/VoiceCommandListener';
 import BatteryMonitor from '@/components/BatteryMonitor';
 import TrialBanner from '@/components/TrialBanner';
 import ZoneMonitor from '@/components/ZoneMonitor';
@@ -51,6 +52,7 @@ const AuthenticatedApp = () => {
   return (
     <SafetyProvider>
       <VoiceListener />
+      <VoiceCommandListener />
       <BatteryMonitor />
       <ZoneMonitor />
       <Routes>

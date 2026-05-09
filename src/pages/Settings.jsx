@@ -30,6 +30,7 @@ export default function Settings() {
     privacyPurgePin: '',
     privacyPurgeDays: 30,
     country: 'AU',
+    voiceCommandTrigger: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -48,6 +49,7 @@ export default function Settings() {
           privacyPurgePin: currentUser.privacyPurgePin || '',
           privacyPurgeDays: currentUser.privacyPurgeDays || 30,
           country: currentUser.country || 'AU',
+          voiceCommandTrigger: currentUser.voiceCommandTrigger || '',
         });
       } catch (error) {
         console.error('Failed to load user:', error);
@@ -69,6 +71,7 @@ export default function Settings() {
         privacyPurgePin: form.privacyPurgePin,
         privacyPurgeDays: form.privacyPurgeDays,
         country: form.country,
+        voiceCommandTrigger: form.voiceCommandTrigger,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -248,7 +251,19 @@ export default function Settings() {
             <MapDownloader />
 
             <div className="border-t border-border/50 pt-5">
-              <VoiceCommandSetup initialPhrase={user?.voiceCommandPhrase || ''} />
+              <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">Voice Commands</p>
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Custom Trigger Word</Label>
+                <Input
+                  value={form.voiceCommandTrigger}
+                  onChange={(e) => setForm({ ...form, voiceCommandTrigger: e.target.value.toLowerCase() })}
+                  placeholder="e.g. help, emergency, alert"
+                  className="bg-muted/50"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Say this word to trigger a fake call. Built-in triggers: "SOS" and "panic"
+                </p>
+              </div>
             </div>
           </div>
 
