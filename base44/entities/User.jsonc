@@ -9,6 +9,51 @@
     "emergencyContactNumber": {
       "type": "string",
       "description": "Phone number of the emergency contact"
+    },
+    "emergencyContact1Name": {
+      "type": "string",
+      "description": "Name of primary emergency contact"
+    },
+    "emergencyContact1Number": {
+      "type": "string",
+      "description": "Phone number of primary emergency contact"
+    },
+    "emergencyContact2Name": {
+      "type": "string",
+      "description": "Name of secondary emergency contact"
+    },
+    "emergencyContact2Number": {
+      "type": "string",
+      "description": "Phone number of secondary emergency contact"
+    },
+    "checkInIntervalHours": {
+      "type": "number",
+      "default": 24,
+      "description": "Hours between required check-ins (default 24)"
+    },
+    "lastCheckInTime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last check-in status log"
+    },
+    "privacyPurgePin": {
+      "type": "string",
+      "description": "PIN code for privacy purge feature"
+    },
+    "privacyPurgeDays": {
+      "type": "number",
+      "default": 30,
+      "description": "Days before auto-purging old logs"
+    },
+    "country": {
+      "type": "string",
+      "default": "AU",
+      "description": "Country for phone number formatting"
+    },
+    "voiceCommandPhrase": {
+      "type": "string",
+      "description": "Custom voice command phrase for SOS activation"
     }
-  }
+  },
+  "required": []
 }

@@ -21,6 +21,7 @@ import AdBanner from '@/components/AdBanner';
 import ActivityDashboard from '@/components/ActivityDashboard';
 import SafetyMapDashboard from '@/components/SafetyMapDashboard';
 import HabitTracker from '@/components/HabitTracker';
+import CheckInStatus from '@/components/CheckInStatus';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -177,6 +178,9 @@ export default function Home() {
 
         {/* Habit Tracker */}
         <HabitTracker />
+
+        {/* Check-In Status */}
+        <CheckInStatus />
 
         {/* Family Members */}
         <motion.div
