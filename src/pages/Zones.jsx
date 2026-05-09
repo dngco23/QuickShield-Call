@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Plus, Loader2, Trash2, MapPin } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Plus, Loader2, Trash2, MapPin, Navigation, Radio, CheckCircle, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Circle, Popup, useMapEvent } from 'react-leaflet';
 import L from 'leaflet';
@@ -11,6 +11,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { isAndroid, isIOS } from '@/lib/deviceDetect';
+import LiveZoneMap from '@/components/LiveZoneMap';
+import { usePushNotifications } from '@/lib/usePushNotifications';
+
+const EARTH_RADIUS = 6371000;
+function calcDistance(lat1, lon1, lat2, lon2) {
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return EARTH_RADIUS * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 function MapClickHandler({ onLocationSelect }) {
   useMapEvent('click', (e) => {
@@ -35,6 +49,7 @@ export default function Zones() {
   const [zones, setZones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showLiveMap, setShowLiveMap] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     latitude: null,
@@ -43,20 +58,58 @@ export default function Zones() {
   });
   const [userLocation, setUserLocation] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [zoneStatuses, setZoneStatuses] = useState({});
+  const [notifications, setNotifications] = useState([]);
+  const previousStatusRef = useRef({});
+  const { sendNotification, permission } = usePushNotifications();
 
   useEffect(() => {
     loadZones();
-    // Get user location
-    navigator.geolocation.getCurrentPosition(
+    // Start live location polling
+    const watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        setUserLocation({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude
-        });
+        const newLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLocation(newLocation);
       },
-      (error) => console.error('Location error:', error)
+      (error) => console.error('Location error:', error),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
     );
+    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
+
+  // Cross-reference location against zones
+  useEffect(() => {
+    if (!userLocation || !zones.length) return;
+    const newStatuses = {};
+    zones.filter(z => z.enabled).forEach((zone) => {
+      const dist = calcDistance(userLocation.lat, userLocation.lng, zone.latitude, zone.longitude);
+      newStatuses[zone.id] = dist <= (zone.radius_meters || 500);
+    });
+
+    // Detect transitions and fire notifications
+    zones.filter(z => z.enabled).forEach((zone) => {
+      const wasInside = previousStatusRef.current[zone.id];
+      const isInside = newStatuses[zone.id];
+      if (wasInside === undefined) return; // skip first tick
+
+      if (wasInside && !isInside) {
+        // Exited zone
+        const msg = { id: Date.now(), text: `Left zone: ${zone.name}`, type: 'exit' };
+        setNotifications(prev => [msg, ...prev.slice(0, 4)]);
+        if (permission === 'granted') sendNotification(`Left Safe Zone: ${zone.name}`, { body: `You have left ${zone.name}` });
+        base44.entities.ZoneNotification.create({ zone_name: zone.name, event_type: 'exit', latitude: userLocation.lat, longitude: userLocation.lng, title: `Left Zone: ${zone.name}`, body: `You left ${zone.name}` }).catch(() => {});
+      } else if (!wasInside && isInside) {
+        // Entered zone
+        const msg = { id: Date.now(), text: `Entered zone: ${zone.name}`, type: 'enter' };
+        setNotifications(prev => [msg, ...prev.slice(0, 4)]);
+        if (permission === 'granted') sendNotification(`Entered Safe Zone: ${zone.name}`, { body: `Welcome to ${zone.name}` });
+        base44.entities.ZoneNotification.create({ zone_name: zone.name, event_type: 'enter', latitude: userLocation.lat, longitude: userLocation.lng, title: `Entered Zone: ${zone.name}`, body: `You entered ${zone.name}` }).catch(() => {});
+      }
+    });
+
+    previousStatusRef.current = newStatuses;
+    setZoneStatuses(newStatuses);
+  }, [userLocation, zones]);
 
   const loadZones = async () => {
     try {
@@ -147,6 +200,84 @@ export default function Zones() {
       </motion.div>
 
       <div className="px-5 space-y-4">
+
+        {/* Live Map View */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-card rounded-2xl border border-border overflow-hidden"
+        >
+          <button
+            onClick={() => setShowLiveMap(!showLiveMap)}
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Navigation className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">Live Location Map</span>
+              {userLocation && (
+                <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
+                  <Radio className="w-3 h-3 animate-pulse" /> Live
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-muted-foreground">{showLiveMap ? '▲ Hide' : '▼ Show'}</span>
+          </button>
+
+          <AnimatePresence>
+            {showLiveMap && (
+              <motion.div
+                initial={{ height: 0 }}
+                animate={{ height: 320 }}
+                exit={{ height: 0 }}
+                className="overflow-hidden"
+              >
+                <LiveZoneMap zones={zones.filter(z => z.enabled)} userLocation={userLocation} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Zone Status Cards */}
+        {zones.filter(z => z.enabled).length > 0 && userLocation && (
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider px-0.5">Zone Status</p>
+            {zones.filter(z => z.enabled).map((zone) => {
+              const inside = zoneStatuses[zone.id];
+              return (
+                <div key={zone.id} className={`flex items-center gap-3 rounded-xl p-3 border ${inside ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
+                  {inside ? <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" /> : <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" />}
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${inside ? 'text-emerald-800' : 'text-red-800'}`}>{zone.name}</p>
+                    <p className={`text-xs ${inside ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {inside ? 'You are inside this zone' : 'You are outside this zone'}
+                    </p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{zone.radius_meters || 500}m</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Recent Notifications */}
+        <AnimatePresence>
+          {notifications.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-2"
+            >
+              <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider px-0.5">Recent Alerts</p>
+              {notifications.map((n) => (
+                <div key={n.id} className={`flex items-center gap-2 rounded-lg p-2.5 text-xs ${n.type === 'exit' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+                  <span>{n.type === 'exit' ? '⚠️' : '✅'}</span>
+                  <span>{n.text}</span>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {!showForm ? (
           <Button
             onClick={() => setShowForm(true)}
