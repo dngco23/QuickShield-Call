@@ -19,6 +19,7 @@ import FamilyMembers from '@/components/FamilyMembers';
 import { useSafety } from '@/lib/safetyContext.jsx';
 import AdBanner from '@/components/AdBanner';
 import ActivityDashboard from '@/components/ActivityDashboard';
+import SafetyMapDashboard from '@/components/SafetyMapDashboard';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -182,6 +183,8 @@ export default function Home() {
         >
           <FamilyMembers />
         </motion.div>
+
+        <SafetyMapDashboard />
 
         <ActivityDashboard />
 
