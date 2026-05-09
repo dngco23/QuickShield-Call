@@ -57,5 +57,33 @@
     "parent_email",
     "child_email",
     "child_name"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "data.parent_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.parent_email": "{{user.email}}"
+        },
+        {
+          "data.child_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.parent_email": "{{user.email}}"
+        },
+        {
+          "data.child_email": "{{user.email}}"
+        }
+      ]
+    },
+    "delete": {
+      "data.parent_email": "{{user.email}}"
+    }
+  }
 }
