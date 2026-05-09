@@ -1,7 +1,6 @@
 import React from 'react';
 import { Home, BookOpen, BarChart3, Settings, MapPin } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useSafety } from '@/lib/safetyContext.jsx';
 
 export default function BottomNav() {
