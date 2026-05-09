@@ -16,6 +16,7 @@ import {
 import { getCountryOptions, getDefaultNumberForCountry } from '@/lib/countryNumbers';
 import PrivacyPurge from '@/components/PrivacyPurge';
 import MapDownloader from '@/components/MapDownloader';
+import SubscriptionCard from '@/components/SubscriptionCard';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -104,6 +105,17 @@ export default function Settings() {
           <p className="text-sm text-muted-foreground font-body mb-6">
             Manage your emergency contacts for the SOS feature
           </p>
+        </motion.div>
+
+        {/* Subscription Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="bg-card rounded-2xl border border-border/50 p-6 max-w-2xl mb-4"
+        >
+          <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">Subscription</p>
+          <SubscriptionCard />
         </motion.div>
 
         <motion.div
