@@ -106,12 +106,14 @@ export default function Home() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.42 }}
-          className="bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-2xl p-4"
+          className="bg-gradient-to-r from-primary to-accent rounded-2xl p-5 text-center"
         >
-          <p className="text-sm text-foreground font-medium mb-2">Unlock Premium Features</p>
-          <p className="text-xs text-muted-foreground mb-3">Get advanced safety features with Pro or Plus plans.</p>
-          <Link to="/pricing" className="text-xs font-medium text-primary hover:underline">
-            View Pricing Plans →
+          <p className="text-sm text-primary-foreground font-semibold mb-2">Unlock Premium Features</p>
+          <p className="text-xs text-primary-foreground/80 mb-4">Get advanced safety features with Pro or Plus plans.</p>
+          <Link to="/pricing">
+            <button className="bg-white text-primary font-semibold px-6 py-2 rounded-full hover:bg-primary-foreground transition-colors">
+              Upgrade to Pro
+            </button>
           </Link>
         </motion.div>
 
