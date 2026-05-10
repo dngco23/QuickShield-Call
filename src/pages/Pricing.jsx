@@ -10,7 +10,8 @@ const PLANS = [
   {
     id: 'free',
     name: 'Free',
-    price: 0,
+    monthlyPrice: 0,
+    yearlyPrice: 0,
     description: 'Basic safety features',
     features: [
       'SOS emergency button',
@@ -26,9 +27,10 @@ const PLANS = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 4.99,
-    priceId: 'price_1TUyGNCmyrIA0G168vckB106',
-    productId: 'prod_UTw8VgUlSWk5yO',
+    monthlyPrice: 4.99,
+    yearlyPrice: 35.88,
+    monthlyPriceId: 'price_1TUyGNCmyrIA0G168vckB106',
+    yearlyPriceId: 'price_1TVfQjCmyrIA0G16p0sQsruM',
     description: 'Advanced safety monitoring',
     features: [
       'Everything in Free, plus:',
@@ -39,15 +41,17 @@ const PLANS = [
       'Detailed safety insights',
       'Priority support'
     ],
-    cta: 'Start Pro Trial',
+    monthlyCta: 'Start Pro Trial',
+    yearlyCta: 'Get Pro Yearly',
     highlighted: false
   },
   {
     id: 'plus',
     name: 'Plus',
-    price: 9.99,
-    priceId: 'price_1TUyGNCmyrIA0G160Gt08D8q',
-    productId: 'prod_UTw8iPGl2IjJd8',
+    monthlyPrice: 9.99,
+    yearlyPrice: 71.88,
+    monthlyPriceId: 'price_1TUyGNCmyrIA0G160Gt08D8q',
+    yearlyPriceId: 'price_1TVfQjCmyrIA0G16GeOX2bun',
     description: 'Complete safety ecosystem',
     features: [
       'Everything in Pro, plus:',
@@ -58,7 +62,8 @@ const PLANS = [
       'Custom SOS messages',
       '24/7 emergency support'
     ],
-    cta: 'Start Plus Trial',
+    monthlyCta: 'Start Plus Trial',
+    yearlyCta: 'Get Plus Yearly',
     highlighted: true
   }
 ];
@@ -66,16 +71,19 @@ const PLANS = [
 export default function Pricing() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(null);
+  const [billing, setBilling] = useState('monthly');
 
   const handleSubscribe = async (plan) => {
     if (plan.disabled) return;
 
+    const priceId = billing === 'yearly' ? plan.yearlyPriceId : plan.monthlyPriceId;
+    const isYearly = billing === 'yearly';
+
     setLoading(plan.id);
     try {
-      const response = await base44.functions.invoke('createCheckout', { priceId: plan.id });
+      const response = await base44.functions.invoke('createCheckout', { priceId: plan.id, isYearly });
 
       if (response.data?.sessionUrl) {
-        // Open in new tab to work in all contexts including PWA/mobile
         window.open(response.data.sessionUrl, '_blank');
       } else {
         alert(response.data?.error || 'Failed to start checkout. Please try again.');
@@ -110,19 +118,54 @@ export default function Pricing() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10"
+          className="text-center mb-8"
         >
           <h2 className="font-display text-3xl font-semibold text-foreground mb-2">
             Choose Your Safety Plan
           </h2>
           <p className="text-muted-foreground">
-            All plans include a 7-day free trial. No credit card required.
+            {billing === 'monthly' ? 'Monthly plans include a 7-day free trial.' : 'Yearly plans are billed upfront — best value.'}
           </p>
+        </motion.div>
+
+        {/* Billing Toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="flex items-center justify-center mb-8"
+        >
+          <div className="inline-flex items-center bg-muted rounded-xl p-1 gap-1">
+            <button
+              onClick={() => setBilling('monthly')}
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${
+                billing === 'monthly'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBilling('yearly')}
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                billing === 'yearly'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Yearly
+              <span className="bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full">Save 40%</span>
+            </button>
+          </div>
         </motion.div>
 
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {PLANS.map((plan, idx) => (
+          {PLANS.map((plan, idx) => {
+            const price = billing === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
+            const cta = plan.disabled ? plan.cta : (billing === 'yearly' ? plan.yearlyCta : plan.monthlyCta);
+            return (
             <motion.div
               key={plan.id}
               initial={{ opacity: 0, y: 20 }}
@@ -145,12 +188,25 @@ export default function Pricing() {
               </h3>
               <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
 
-              <div className="mb-6">
+              <div className="mb-2">
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-foreground">A${plan.price}</span>
-                  {plan.price > 0 && <span className="text-muted-foreground">/month</span>}
+                  <span className="text-4xl font-bold text-foreground">A${price}</span>
+                  {price > 0 && <span className="text-muted-foreground">/{billing === 'yearly' ? 'year' : 'month'}</span>}
                 </div>
+                {billing === 'yearly' && price > 0 && (
+                  <p className="text-xs text-green-600 font-medium mt-1">
+                    A${(price / 12).toFixed(2)}/month — billed yearly
+                  </p>
+                )}
               </div>
+
+              {billing === 'yearly' && price > 0 && (
+                <p className="text-xs text-muted-foreground mb-4">Pay now, no trial period</p>
+              )}
+              {billing === 'monthly' && price > 0 && (
+                <p className="text-xs text-muted-foreground mb-4">7-day free trial included</p>
+              )}
+              {price === 0 && <div className="mb-4" />}
 
               <Button
                 onClick={() => handleSubscribe(plan)}
@@ -167,7 +223,7 @@ export default function Pricing() {
                     Processing...
                   </>
                 ) : (
-                  plan.cta
+                  cta
                 )}
               </Button>
 
@@ -187,7 +243,8 @@ export default function Pricing() {
                 ))}
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
 
         <AdBanner className="rounded-2xl mb-4" />
@@ -200,7 +257,9 @@ export default function Pricing() {
           className="bg-accent/30 border border-accent rounded-lg p-4 text-center"
         >
           <p className="text-xs text-accent-foreground/70 font-body">
-            💳 All subscriptions start with a 7-day free trial. Cancel anytime, no questions asked.
+            {billing === 'monthly'
+              ? '💳 Monthly plans start with a 7-day free trial. Cancel anytime, no questions asked.'
+              : '💳 Yearly plans are billed upfront with no trial period. Cancel anytime for remaining months.'}
           </p>
         </motion.div>
       </div>
