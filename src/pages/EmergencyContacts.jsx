@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plus, Trash2, Edit2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit2, AlertCircle, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -233,6 +233,13 @@ export default function EmergencyContacts() {
                     <p className="text-sm text-muted-foreground font-body">{contact.phone}</p>
                   </div>
                   <div className="flex gap-2">
+                    <a
+                      href={`tel:${contact.phone}`}
+                      className="p-2 hover:bg-green-50 rounded-lg transition-colors"
+                      title="Call"
+                    >
+                      <Phone className="w-4 h-4 text-green-600" />
+                    </a>
                     <button
                       onClick={() => handleEdit(contact)}
                       className="p-2 hover:bg-muted rounded-lg transition-colors"

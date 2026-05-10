@@ -22,6 +22,7 @@ import ActivityDashboard from '@/components/ActivityDashboard';
 import SafetyMapDashboard from '@/components/SafetyMapDashboard';
 import HabitTracker from '@/components/HabitTracker';
 import CheckInStatus from '@/components/CheckInStatus';
+import QuickDialContacts from '@/components/QuickDialContacts';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -177,6 +178,9 @@ export default function Home() {
             </Link>
           )}
         </motion.div>
+
+        {/* Quick Dial Contacts */}
+        <QuickDialContacts />
 
         {/* Habit Tracker */}
         <HabitTracker />
