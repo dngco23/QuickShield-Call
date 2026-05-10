@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -66,34 +66,19 @@ const PLANS = [
 export default function Pricing() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(null);
-  const [userEmail, setUserEmail] = useState(null);
-
-  useEffect(() => {
-    base44.auth.me().then(u => { if (u?.email) setUserEmail(u.email); }).catch(() => {});
-  }, []);
 
   const handleSubscribe = async (plan) => {
     if (plan.disabled) return;
 
     setLoading(plan.id);
     try {
-      // Check if running in iframe
       if (window.self !== window.top) {
         alert('Checkout only works in the published app. Please visit the app directly to subscribe.');
         setLoading(null);
         return;
       }
 
-      let email = userEmail;
-      if (!email) {
-        email = window.prompt('Please enter your email address to continue:');
-        if (!email) { setLoading(null); return; }
-      }
-
-      const response = await base44.functions.invoke('createCheckout', {
-        priceId: plan.id,
-        email,
-      });
+      const response = await base44.functions.invoke('createCheckout', { priceId: plan.id });
 
       if (response.data?.sessionUrl) {
         window.location.href = response.data.sessionUrl;

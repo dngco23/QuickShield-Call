@@ -1,19 +1,21 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
 const STRIPE_API_URL = 'https://api.stripe.com/v1';
 
 Deno.serve(async (req) => {
   try {
-    const body = await req.json();
-    const { email } = body;
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
 
-    if (!email) {
-      return Response.json({ error: 'Email is required' }, { status: 400 });
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const origin = req.headers.get('origin') || 'https://quickshield-call.base44.app';
 
     // Find customer by email
-    const searchRes = await fetch(`${STRIPE_API_URL}/customers?email=${encodeURIComponent(email)}&limit=1`, {
+    const searchRes = await fetch(`${STRIPE_API_URL}/customers?email=${encodeURIComponent(user.email)}&limit=1`, {
       headers: { 'Authorization': `Bearer ${STRIPE_SECRET_KEY}` }
     });
     const searchData = await searchRes.json();

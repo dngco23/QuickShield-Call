@@ -14,10 +14,7 @@ export default function SubscriptionCard() {
   useEffect(() => {
     const load = async () => {
       try {
-        let email = null;
-        try { const u = await base44.auth.me(); email = u?.email; } catch (_) {}
-        if (!email) { setLoading(false); return; }
-        const res = await base44.functions.invoke('getBillingPortal', { email });
+        const res = await base44.functions.invoke('getBillingPortal', {});
         setData(res.data);
       } catch (err) {
         setError('Could not load subscription info.');

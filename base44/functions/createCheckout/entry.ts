@@ -1,3 +1,5 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
 const STRIPE_API_URL = 'https://api.stripe.com/v1';
 
@@ -8,8 +10,15 @@ const PRICE_IDS = {
 
 Deno.serve(async (req) => {
   try {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await req.json();
-    const { priceId, email } = body;
+    const { priceId } = body;
 
     if (!priceId || !PRICE_IDS[priceId]) {
       return Response.json({ error: 'Invalid price ID' }, { status: 400 });
@@ -18,14 +27,14 @@ Deno.serve(async (req) => {
     const origin = req.headers.get('origin') || 'https://quickshield-call.base44.app';
 
     const sessionParams = new URLSearchParams();
-    if (email) sessionParams.append('customer_email', email);
+    sessionParams.append('customer_email', user.email);
     sessionParams.append('line_items[0][price]', PRICE_IDS[priceId]);
     sessionParams.append('line_items[0][quantity]', '1');
     sessionParams.append('mode', 'subscription');
     sessionParams.append('success_url', `${origin}/pricing?session_id={CHECKOUT_SESSION_ID}`);
     sessionParams.append('cancel_url', `${origin}/pricing`);
     sessionParams.append('metadata[base44_app_id]', Deno.env.get('BASE44_APP_ID') || '');
-    if (email) sessionParams.append('metadata[user_email]', email);
+    sessionParams.append('metadata[user_email]', user.email);
 
     const response = await fetch(`${STRIPE_API_URL}/checkout/sessions`, {
       method: 'POST',
