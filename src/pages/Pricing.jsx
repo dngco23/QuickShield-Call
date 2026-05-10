@@ -72,16 +72,11 @@ export default function Pricing() {
 
     setLoading(plan.id);
     try {
-      if (window.self !== window.top) {
-        alert('Checkout only works in the published app. Please visit the app directly to subscribe.');
-        setLoading(null);
-        return;
-      }
-
       const response = await base44.functions.invoke('createCheckout', { priceId: plan.id });
 
       if (response.data?.sessionUrl) {
-        window.location.href = response.data.sessionUrl;
+        // Open in new tab to work in all contexts including PWA/mobile
+        window.open(response.data.sessionUrl, '_blank');
       } else {
         alert(response.data?.error || 'Failed to start checkout. Please try again.');
       }
