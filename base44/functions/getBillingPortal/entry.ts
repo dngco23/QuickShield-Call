@@ -1,32 +1,30 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
 const STRIPE_API_URL = 'https://api.stripe.com/v1';
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const body = await req.json();
+    const { email } = body;
 
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!email) {
+      return Response.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    const origin = req.headers.get('origin') || 'https://app.base44.com';
+    const origin = req.headers.get('origin') || 'https://quickshield-call.base44.app';
 
     // Find customer by email
-    const searchRes = await fetch(`${STRIPE_API_URL}/customers?email=${encodeURIComponent(user.email)}&limit=1`, {
+    const searchRes = await fetch(`${STRIPE_API_URL}/customers?email=${encodeURIComponent(email)}&limit=1`, {
       headers: { 'Authorization': `Bearer ${STRIPE_SECRET_KEY}` }
     });
     const searchData = await searchRes.json();
 
     if (!searchData.data || searchData.data.length === 0) {
-      return Response.json({ error: 'No Stripe customer found for this account' }, { status: 404 });
+      return Response.json({ subscription: null, portalUrl: null });
     }
 
     const customerId = searchData.data[0].id;
 
-    // Get active subscriptions for this customer
+    // Get active subscriptions
     const subRes = await fetch(`${STRIPE_API_URL}/subscriptions?customer=${customerId}&status=active&limit=1`, {
       headers: { 'Authorization': `Bearer ${STRIPE_SECRET_KEY}` }
     });
@@ -35,13 +33,9 @@ Deno.serve(async (req) => {
     let subscription = null;
     if (subData.data && subData.data.length > 0) {
       const sub = subData.data[0];
-      const priceId = sub.items.data[0]?.price?.id;
-      const amount = sub.items.data[0]?.price?.unit_amount;
-      const currency = sub.items.data[0]?.price?.currency;
-      const interval = sub.items.data[0]?.price?.recurring?.interval;
-      const productId = sub.items.data[0]?.price?.product;
+      const priceItem = sub.items.data[0];
+      const productId = priceItem?.price?.product;
 
-      // Get product name
       const prodRes = await fetch(`${STRIPE_API_URL}/products/${productId}`, {
         headers: { 'Authorization': `Bearer ${STRIPE_SECRET_KEY}` }
       });
@@ -49,10 +43,10 @@ Deno.serve(async (req) => {
 
       subscription = {
         planName: prodData.name,
-        priceId,
-        amount: amount / 100,
-        currency: currency?.toUpperCase(),
-        interval,
+        priceId: priceItem?.price?.id,
+        amount: priceItem?.price?.unit_amount / 100,
+        currency: priceItem?.price?.currency?.toUpperCase(),
+        interval: priceItem?.price?.recurring?.interval,
         currentPeriodEnd: new Date(sub.current_period_end * 1000).toISOString(),
         cancelAtPeriodEnd: sub.cancel_at_period_end,
         status: sub.status,
@@ -77,13 +71,13 @@ Deno.serve(async (req) => {
     const portalData = await portalRes.json();
 
     if (!portalRes.ok) {
-      console.error('Portal error:', portalData);
+      console.error('Portal error:', JSON.stringify(portalData));
       return Response.json({ subscription, portalUrl: null });
     }
 
     return Response.json({ subscription, portalUrl: portalData.url });
   } catch (error) {
-    console.error('getBillingPortal error:', error);
+    console.error('getBillingPortal error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

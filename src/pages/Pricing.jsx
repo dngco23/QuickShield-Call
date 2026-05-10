@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -66,6 +66,11 @@ const PLANS = [
 export default function Pricing() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(u => { if (u?.email) setUserEmail(u.email); }).catch(() => {});
+  }, []);
 
   const handleSubscribe = async (plan) => {
     if (plan.disabled) return;
@@ -79,13 +84,21 @@ export default function Pricing() {
         return;
       }
 
+      let email = userEmail;
+      if (!email) {
+        email = window.prompt('Please enter your email address to continue:');
+        if (!email) { setLoading(null); return; }
+      }
+
       const response = await base44.functions.invoke('createCheckout', {
-        priceId: plan.priceId,
-        productId: plan.productId
+        priceId: plan.id,
+        email,
       });
 
-      if (response.data.sessionUrl) {
+      if (response.data?.sessionUrl) {
         window.location.href = response.data.sessionUrl;
+      } else {
+        alert(response.data?.error || 'Failed to start checkout. Please try again.');
       }
     } catch (error) {
       console.error('Checkout error:', error);

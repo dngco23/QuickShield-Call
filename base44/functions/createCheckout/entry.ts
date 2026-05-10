@@ -1,5 +1,3 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
 const STRIPE_API_URL = 'https://api.stripe.com/v1';
 
@@ -10,59 +8,24 @@ const PRICE_IDS = {
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user is in an iframe (published app check)
-    const origin = req.headers.get('origin');
-    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      // Allow local dev, block preview
-      if (req.headers.get('referer')?.includes('preview')) {
-        return Response.json(
-          { error: 'Checkout works only from a published app' },
-          { status: 403 }
-        );
-      }
-    }
-
     const body = await req.json();
-    const { priceId } = body;
+    const { priceId, email } = body;
 
     if (!priceId || !PRICE_IDS[priceId]) {
       return Response.json({ error: 'Invalid price ID' }, { status: 400 });
     }
 
-    const sessionParams = {
-      customer_email: user.email,
-      line_items: [
-        {
-          price: PRICE_IDS[priceId],
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: `${origin}/pricing?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/pricing`,
-      metadata: {
-        base44_app_id: Deno.env.get('BASE44_APP_ID'),
-        user_email: user.email,
-      },
-    };
+    const origin = req.headers.get('origin') || 'https://quickshield-call.base44.app';
 
-    const searchParams = new URLSearchParams();
-    Object.entries(sessionParams).forEach(([key, value]) => {
-      if (typeof value === 'object') {
-        Object.entries(value).forEach(([subKey, subValue], idx) => {
-          searchParams.append(`${key}[${idx}][${subKey}]`, subValue);
-        });
-      } else {
-        searchParams.append(key, value);
-      }
-    });
+    const sessionParams = new URLSearchParams();
+    if (email) sessionParams.append('customer_email', email);
+    sessionParams.append('line_items[0][price]', PRICE_IDS[priceId]);
+    sessionParams.append('line_items[0][quantity]', '1');
+    sessionParams.append('mode', 'subscription');
+    sessionParams.append('success_url', `${origin}/pricing?session_id={CHECKOUT_SESSION_ID}`);
+    sessionParams.append('cancel_url', `${origin}/pricing`);
+    sessionParams.append('metadata[base44_app_id]', Deno.env.get('BASE44_APP_ID') || '');
+    if (email) sessionParams.append('metadata[user_email]', email);
 
     const response = await fetch(`${STRIPE_API_URL}/checkout/sessions`, {
       method: 'POST',
@@ -70,19 +33,19 @@ Deno.serve(async (req) => {
         'Authorization': `Bearer ${STRIPE_SECRET_KEY}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: searchParams.toString(),
+      body: sessionParams.toString(),
     });
 
+    const session = await response.json();
+
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Stripe error:', error);
-      return Response.json({ error: 'Failed to create checkout session' }, { status: 500 });
+      console.error('Stripe error:', JSON.stringify(session));
+      return Response.json({ error: session?.error?.message || 'Failed to create checkout session' }, { status: 500 });
     }
 
-    const session = await response.json();
     return Response.json({ sessionUrl: session.url });
   } catch (error) {
-    console.error('Checkout error:', error);
+    console.error('Checkout error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
