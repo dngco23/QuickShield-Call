@@ -23,6 +23,7 @@ import SafetyMapDashboard from '@/components/SafetyMapDashboard';
 import HabitTracker from '@/components/HabitTracker';
 import CheckInStatus from '@/components/CheckInStatus';
 import QuickDialContacts from '@/components/QuickDialContacts';
+import PlanBadge from '@/components/PlanBadge';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -68,7 +69,8 @@ export default function Home() {
               QuickShield Call
             </h1>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <PlanBadge />
             <button
               onClick={() => window.sosButtonRef?.click()}
               className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500/20 to-red-600/20 border border-red-500/30 flex items-center justify-center hover:opacity-80 transition-opacity"

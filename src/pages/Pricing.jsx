@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import AdBanner from '@/components/AdBanner';
+import { useSubscription } from '@/lib/useSubscription';
 
 const PLANS = [
   {
@@ -72,16 +73,22 @@ export default function Pricing() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(null);
   const [billing, setBilling] = useState('monthly');
+  const { planName, loading: subLoading } = useSubscription();
+
+  const currentPlan = planName; // 'Free', 'Pro', or 'Plus'
 
   const handleSubscribe = async (plan) => {
     if (plan.disabled) return;
 
-    const priceId = billing === 'yearly' ? plan.yearlyPriceId : plan.monthlyPriceId;
     const isYearly = billing === 'yearly';
-
     setLoading(plan.id);
     try {
       const response = await base44.functions.invoke('createCheckout', { priceId: plan.id, isYearly });
+
+      if (response.data?.error === 'already_subscribed') {
+        alert('You already have an active subscription. Manage it from the Settings page.');
+        return;
+      }
 
       if (response.data?.sessionUrl) {
         window.open(response.data.sessionUrl, '_blank');
@@ -164,7 +171,11 @@ export default function Pricing() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {PLANS.map((plan, idx) => {
             const price = billing === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
-            const cta = plan.disabled ? plan.cta : (billing === 'yearly' ? plan.yearlyCta : plan.monthlyCta);
+            const isCurrentPlan = !subLoading && (
+              plan.id === 'free' ? currentPlan === 'Free' : plan.name === currentPlan
+            );
+            const cta = isCurrentPlan ? '✓ Current Plan' : (plan.disabled ? plan.cta : (billing === 'yearly' ? plan.yearlyCta : plan.monthlyCta));
+            const isDisabled = plan.disabled || isCurrentPlan || loading === plan.id;
             return (
             <motion.div
               key={plan.id}
@@ -210,9 +221,11 @@ export default function Pricing() {
 
               <Button
                 onClick={() => handleSubscribe(plan)}
-                disabled={plan.disabled || loading === plan.id}
+                disabled={isDisabled}
                 className={`w-full mb-6 ${
-                  plan.highlighted
+                  isCurrentPlan
+                    ? 'bg-green-100 text-green-700 border border-green-300'
+                    : plan.highlighted
                     ? 'bg-primary hover:bg-primary/90'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }`}

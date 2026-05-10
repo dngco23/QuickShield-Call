@@ -30,6 +30,22 @@ Deno.serve(async (req) => {
 
     const origin = req.headers.get('origin') || 'https://quickshield-call.base44.app';
 
+    // Check if user already has an active subscription
+    const searchRes = await fetch(`${STRIPE_API_URL}/customers?email=${encodeURIComponent(user.email)}&limit=1`, {
+      headers: { 'Authorization': `Bearer ${STRIPE_SECRET_KEY}` }
+    });
+    const searchData = await searchRes.json();
+    if (searchData.data && searchData.data.length > 0) {
+      const customerId = searchData.data[0].id;
+      const subRes = await fetch(`${STRIPE_API_URL}/subscriptions?customer=${customerId}&status=active&limit=1`, {
+        headers: { 'Authorization': `Bearer ${STRIPE_SECRET_KEY}` }
+      });
+      const subData = await subRes.json();
+      if (subData.data && subData.data.length > 0) {
+        return Response.json({ error: 'already_subscribed' }, { status: 400 });
+      }
+    }
+
     const sessionParams = new URLSearchParams();
     sessionParams.append('customer_email', user.email);
     sessionParams.append('line_items[0][price]', PRICE_IDS[lookupKey]);
