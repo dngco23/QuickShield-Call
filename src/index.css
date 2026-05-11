@@ -90,6 +90,7 @@
     font-size: 14px;
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
+    /* No global user-select:none — text in content areas must remain selectable */
   }
   /* Safe area support */
   :root {
@@ -106,5 +107,20 @@
   button, a, [role="button"] {
     min-height: 44px;
     min-width: 44px;
+  }
+  /* Non-selectable chrome: nav items, icon-only buttons, badges */
+  nav, [role="tablist"], [role="tab"],
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  /* Keyboard focus rings — visible only on keyboard navigation */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  /* Remove default outline when using mouse */
+  :focus:not(:focus-visible) {
+    outline: none;
   }
 }

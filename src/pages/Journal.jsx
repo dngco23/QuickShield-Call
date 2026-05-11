@@ -126,6 +126,8 @@ export default function Journal() {
   return (
     <div
       ref={scrollRef}
+      role="main"
+      aria-labelledby="journal-heading"
       className="min-h-screen bg-background pb-20 overflow-y-auto scroll-container"
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
@@ -144,13 +146,14 @@ export default function Journal() {
       >
         <button
           onClick={() => navigate('/')}
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
+          aria-label="Go back"
+          className="p-2 hover:bg-muted rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5" aria-hidden="true" />
         </button>
         <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-primary" />
-          <h1 className="font-display text-2xl font-semibold">Journal</h1>
+          <BookOpen className="w-5 h-5 text-primary" aria-hidden="true" />
+          <h1 className="font-display text-2xl font-semibold" id="journal-heading">Journal</h1>
         </div>
         <div className="ml-auto">
           {!isOnline ? (
@@ -188,13 +191,16 @@ export default function Journal() {
             className="bg-card rounded-2xl border border-border p-4 space-y-3"
           >
             <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground uppercase">How are you feeling?</label>
-              <div className="flex gap-2">
+              <label id="mood-label" className="text-xs font-medium text-muted-foreground uppercase">How are you feeling?</label>
+              <div role="radiogroup" aria-labelledby="mood-label" className="flex gap-2">
                 {moods.map((m) => (
                   <button
                     key={m.value}
+                    role="radio"
+                    aria-checked={mood === m.value}
+                    aria-label={m.label}
                     onClick={() => setMood(m.value)}
-                    className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-all ${
+                    className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       mood === m.value ? 'bg-primary/20' : 'bg-muted/30'
                     }`}
                   >
@@ -218,12 +224,13 @@ export default function Journal() {
                   onClick={toggleListening}
                   animate={isListening ? { scale: [1, 1.05, 1] } : { scale: 1 }}
                   transition={{ duration: 1, repeat: isListening ? Infinity : 0 }}
-                  className={`p-2 rounded-lg transition-all ${
+                  aria-label={isListening ? 'Stop dictation' : 'Start dictation'}
+                  aria-pressed={isListening}
+                  className={`p-2 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                     isListening
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted hover:bg-muted/80 text-muted-foreground'
                   }`}
-                  title="Tap to dictate"
                 >
                   {isListening ? (
                     <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 0.6, repeat: Infinity }}>
