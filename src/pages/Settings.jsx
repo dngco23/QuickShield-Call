@@ -18,9 +18,12 @@ import PrivacyPurge from '@/components/PrivacyPurge';
 import MapDownloader from '@/components/MapDownloader';
 import SubscriptionCard from '@/components/SubscriptionCard';
 import VoiceCommandSetup from '@/components/VoiceCommandSetup';
+import DeleteAccount from '@/components/DeleteAccount';
+import { useTheme } from '@/lib/useTheme';
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { isDark, toggle: toggleTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [form, setForm] = useState({
     emergencyContact1Name: '',
@@ -109,6 +112,25 @@ export default function Settings() {
           <p className="text-sm text-muted-foreground font-body mb-6">
             Manage your emergency contacts for the SOS feature
           </p>
+        </motion.div>
+
+        {/* Dark Mode Toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-card rounded-2xl border border-border/50 p-4 max-w-2xl mb-4 flex items-center justify-between"
+        >
+          <div>
+            <p className="text-sm font-medium text-foreground">Dark Mode</p>
+            <p className="text-xs text-muted-foreground">Follows system preference by default</p>
+          </div>
+          <button
+            onClick={toggleTheme}
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            className={`relative w-12 h-6 rounded-full transition-colors min-w-[44px] min-h-[44px] flex items-center ${isDark ? 'bg-primary' : 'bg-muted'}`}
+          >
+            <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isDark ? 'translate-x-6' : ''}`} />
+          </button>
         </motion.div>
 
         {/* Subscription Section */}
@@ -267,10 +289,16 @@ export default function Settings() {
             </div>
           </div>
 
+          {/* Danger Zone */}
+          <div className="border-t border-destructive/20 pt-5 mt-5">
+            <p className="text-xs font-medium text-destructive/60 uppercase tracking-wider mb-3">Danger Zone</p>
+            <DeleteAccount />
+          </div>
+
           <Button
             onClick={handleSave}
             disabled={saving || saved}
-            className="w-full mt-6 bg-primary hover:bg-primary/90 disabled:opacity-70"
+            className="w-full mt-6 bg-primary hover:bg-primary/90 disabled:opacity-70 min-h-[44px]"
           >
             {saved ? (
               <div className="flex items-center gap-2">

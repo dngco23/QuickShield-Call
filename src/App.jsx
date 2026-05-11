@@ -8,18 +8,29 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { SafetyProvider } from '@/lib/safetyContext.jsx';
 import { TrialProvider } from '@/lib/trialContext';
 import { PowerSaveProvider } from '@/lib/powerSaveContext';
-import Home from '@/pages/Home';
-import Journal from '@/pages/Journal';
-import Insights from '@/pages/Insights';
-import { useState } from 'react';
-import Settings from '@/pages/Settings';
-import PanicMode from '@/pages/PanicMode';
-import EmergencyContacts from '@/pages/EmergencyContacts';
-import Zones from '@/pages/Zones';
-import ParentDashboard from '@/pages/ParentDashboard';
-import Pricing from '@/pages/Pricing';
-import About from '@/pages/About';
-import Contact from '@/pages/Contact';
+import { lazy, Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
+import { useTheme } from '@/lib/useTheme';
+
+const Home = lazy(() => import('@/pages/Home'));
+const Journal = lazy(() => import('@/pages/Journal'));
+const Insights = lazy(() => import('@/pages/Insights'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const PanicMode = lazy(() => import('@/pages/PanicMode'));
+const EmergencyContacts = lazy(() => import('@/pages/EmergencyContacts'));
+const Zones = lazy(() => import('@/pages/Zones'));
+const ParentDashboard = lazy(() => import('@/pages/ParentDashboard'));
+const Pricing = lazy(() => import('@/pages/Pricing'));
+const About = lazy(() => import('@/pages/About'));
+const Contact = lazy(() => import('@/pages/Contact'));
+
+function ThemeInit() { useTheme(); return null; }
+
+const PageLoader = () => (
+  <div className="fixed inset-0 flex items-center justify-center bg-background">
+    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+  </div>
+);
 import VoiceListener from '@/components/VoiceListener';
 import VoiceCommandListener from '@/components/VoiceCommandListener';
 import PanicVoiceListener from '@/components/PanicVoiceListener';
@@ -57,20 +68,22 @@ const AuthenticatedApp = () => {
       <PanicVoiceListener />
       <BatteryMonitor />
       <ZoneMonitor />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/journal" element={<Journal />} />
-        <Route path="/insights" element={<Insights />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/emergency-contacts" element={<EmergencyContacts />} />
-        <Route path="/zones" element={<Zones />} />
-        <Route path="/panic" element={<PanicMode />} />
-        <Route path="/parent-dashboard" element={<ParentDashboard />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/journal" element={<Journal />} />
+          <Route path="/insights" element={<Insights />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/emergency-contacts" element={<EmergencyContacts />} />
+          <Route path="/zones" element={<Zones />} />
+          <Route path="/panic" element={<PanicMode />} />
+          <Route path="/parent-dashboard" element={<ParentDashboard />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </Suspense>
     </SafetyProvider>
   );
 };
@@ -78,6 +91,7 @@ const AuthenticatedApp = () => {
 function App() {
   return (
     <AuthProvider>
+      <ThemeInit />
       <QueryClientProvider client={queryClientInstance}>
         <PowerSaveProvider>
           <TrialProvider>

@@ -58,7 +58,8 @@ export default function FakeCallOverlay() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-between py-16 px-6"
+          className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-between px-6"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 64px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)' }}
         >
           {/* Caller info */}
           <div className="flex flex-col items-center mt-8">

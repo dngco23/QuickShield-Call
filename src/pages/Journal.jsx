@@ -7,6 +7,8 @@ import SyncStatus from '@/components/SyncStatus';
 import { useOfflineJournal } from '@/lib/useOfflineJournal';
 import { useSyncManager } from '@/lib/useSyncManager';
 import { initDB } from '@/lib/offlineDB';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
+import PullToRefreshIndicator from '@/components/PullToRefresh';
 
 export default function Journal() {
   const navigate = useNavigate();
@@ -16,9 +18,17 @@ export default function Journal() {
   const [isListening, setIsListening] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const recognitionRef = useRef(null);
+  const scrollRef = useRef(null);
 
-  const { localEntries, loading: localLoading, addEntry, getUnsyncedEntries } = useOfflineJournal();
+  const { localEntries, loading: localLoading, addEntry, getUnsyncedEntries, refreshEntries } = useOfflineJournal();
   const { syncing, lastSyncTime, performSync } = useSyncManager();
+
+  const handleRefresh = async () => {
+    await performSync();
+    if (refreshEntries) await refreshEntries();
+  };
+
+  const { isPulling, pullProgress, isRefreshing } = usePullToRefresh(scrollRef, handleRefresh);
 
   const moods = [
     { emoji: '😔', label: 'Low', value: 'low' },
@@ -114,7 +124,12 @@ export default function Journal() {
   const unsyncedCount = getUnsyncedEntries().length;
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div
+      ref={scrollRef}
+      className="min-h-screen bg-background pb-20 overflow-y-auto scroll-container"
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+    >
+      <PullToRefreshIndicator pullProgress={pullProgress} isRefreshing={isRefreshing} />
       <SyncStatus
         isOnline={isOnline}
         syncing={syncing}

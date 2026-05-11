@@ -57,7 +57,7 @@ export default function Home() {
       <AudioRecorder />
 
       {/* Header */}
-      <div className="px-5 pt-12 pb-4">
+      <div className="px-5 pb-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 16px)' }}>
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
