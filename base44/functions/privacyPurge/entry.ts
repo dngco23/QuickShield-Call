@@ -3,60 +3,47 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
 
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    let body = {};
+    try { body = await req.json(); } catch (_) {}
 
-    const body = await req.json();
-    const { action, daysOld } = body;
+    const { daysOld = 30 } = body;
 
-    if (action === 'purge') {
-      if (!daysOld || daysOld < 1) {
-        return Response.json({ error: 'Invalid days parameter' }, { status: 400 });
-      }
+    // Scheduled automations have no user session — use service role for all purges.
+    // If called from the frontend with a logged-in user, scope to that user only.
+    const user = await base44.auth.me().catch(() => null);
 
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - Math.max(1, daysOld));
 
-      try {
-        // Delete old recordings
-        const recordings = await base44.entities.Recording.filter(
-          { created_by: user.email },
-          '-created_date',
-          1000
-        );
+    const db = user ? base44.entities : base44.asServiceRole.entities;
 
-        for (const recording of recordings) {
-          const recordingDate = new Date(recording.created_date);
-          if (recordingDate < cutoffDate) {
-            await base44.entities.Recording.delete(recording.id);
-          }
-        }
-
-        // Delete old messages
-        const messages = await base44.entities.PanicMessage.filter(
-          { from_user: user.email },
-          '-timestamp',
-          1000
-        );
-
-        for (const message of messages) {
-          const msgDate = new Date(message.timestamp);
-          if (msgDate < cutoffDate) {
-            await base44.entities.PanicMessage.delete(message.id);
-          }
-        }
-
-        return Response.json({ success: true, message: 'Privacy purge completed' });
-      } catch (error) {
-        return Response.json({ error: error.message }, { status: 500 });
+    // Fetch and delete old recordings
+    const recordingFilter = user ? { created_by: user.email } : {};
+    const recordings = await db.Recording.filter(recordingFilter, '-created_date', 1000);
+    let deletedRecordings = 0;
+    for (const rec of recordings) {
+      if (new Date(rec.created_date) < cutoffDate) {
+        await db.Recording.delete(rec.id);
+        deletedRecordings++;
       }
     }
 
-    return Response.json({ error: 'Invalid action' }, { status: 400 });
+    // Fetch and delete old panic messages
+    const messageFilter = user ? { from_user: user.email } : {};
+    const messages = await db.PanicMessage.filter(messageFilter, '-timestamp', 1000);
+    let deletedMessages = 0;
+    for (const msg of messages) {
+      if (new Date(msg.timestamp) < cutoffDate) {
+        await db.PanicMessage.delete(msg.id);
+        deletedMessages++;
+      }
+    }
+
+    console.log(`Privacy purge complete: ${deletedRecordings} recordings, ${deletedMessages} messages deleted (cutoff: ${cutoffDate.toISOString()})`);
+    return Response.json({ success: true, deletedRecordings, deletedMessages });
   } catch (error) {
+    console.error('Privacy purge error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
