@@ -22,6 +22,7 @@ import About from '@/pages/About';
 import Contact from '@/pages/Contact';
 import VoiceListener from '@/components/VoiceListener';
 import VoiceCommandListener from '@/components/VoiceCommandListener';
+import PanicVoiceListener from '@/components/PanicVoiceListener';
 import BatteryMonitor from '@/components/BatteryMonitor';
 import TrialBanner from '@/components/TrialBanner';
 import ZoneMonitor from '@/components/ZoneMonitor';
@@ -53,6 +54,7 @@ const AuthenticatedApp = () => {
     <SafetyProvider>
       <VoiceListener />
       <VoiceCommandListener />
+      <PanicVoiceListener />
       <BatteryMonitor />
       <ZoneMonitor />
       <Routes>

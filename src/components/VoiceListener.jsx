@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, AlertCircle } from 'lucide-react';
+import { Mic, AlertCircle, ShieldAlert } from 'lucide-react';
 import { useVoiceRecognition } from '@/lib/useVoiceRecognition';
 import { useSafety } from '@/lib/safetyContext.jsx';
 import { useTrial } from '@/lib/trialContext';
@@ -9,7 +9,6 @@ import PaywallOverlay from '@/components/PaywallOverlay';
 export default function VoiceListener() {
   const { settings, triggerSOS } = useSafety();
   const { hasFeatureAccess } = useTrial();
-  const [hasPermission, setHasPermission] = useState(null);
   const [showPaywall, setShowPaywall] = useState(false);
 
   const handleWakeWordDetected = () => {
@@ -25,32 +24,23 @@ export default function VoiceListener() {
     handleWakeWordDetected
   );
 
-  useEffect(() => {
-    // Check microphone permission on mount
-    const checkPermission = async () => {
-      try {
-        const result = await navigator.permissions.query({ name: 'microphone' });
-        setHasPermission(result.state === 'granted');
-      } catch (_) {
-        setHasPermission(null);
-      }
-    };
-    checkPermission();
+  const hasPanicWord = !!(settings.panicWakeWord?.trim());
+  const hasCallWord = !!(settings.voiceWakeWord?.trim());
+  const anyActive = isListening || hasPanicWord;
 
-    // Request persistent microphone access for background listening
+  useEffect(() => {
+    // Request microphone access when any wake word is configured
     const requestMicrophoneAccess = async () => {
       try {
         await navigator.mediaDevices.getUserMedia({ audio: true });
       } catch (_) {}
     };
-    if (settings.voiceWakeWord && settings.voiceWakeWord.trim()) {
+    if (hasCallWord || hasPanicWord) {
       requestMicrophoneAccess();
     }
-  }, [settings.voiceWakeWord]);
+  }, [hasCallWord, hasPanicWord]);
 
-  if (!settings.voiceWakeWord || !settings.voiceWakeWord.trim()) {
-    return null;
-  }
+  if (!hasCallWord && !hasPanicWord) return null;
 
   return (
     <>
@@ -61,33 +51,36 @@ export default function VoiceListener() {
         />
       )}
       <AnimatePresence>
-        {isListening && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="fixed top-4 right-4 z-40 flex items-center gap-2 bg-primary/90 text-primary-foreground px-3 py-2 rounded-full text-xs font-body font-medium shadow-lg"
-        >
+        {(isListening || hasPanicWord) && (
           <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 1, repeat: Infinity }}
+            key="voice-indicator"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed top-4 right-4 z-40 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-body font-medium shadow-lg"
+            style={{ background: hasPanicWord ? 'hsl(var(--destructive) / 0.9)' : 'hsl(var(--primary) / 0.9)', color: 'white' }}
           >
-            <Mic className="w-3 h-3" />
+            <motion.div
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.2, repeat: Infinity }}
+            >
+              {hasPanicWord ? <ShieldAlert className="w-3 h-3" /> : <Mic className="w-3 h-3" />}
+            </motion.div>
+            <span>{hasPanicWord ? 'Panic listener on' : 'Listening...'}</span>
           </motion.div>
-          <span>Listening...</span>
-        </motion.div>
-      )}
-      {error && error !== 'no-speech' && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          className="fixed top-4 right-4 z-40 flex items-center gap-2 bg-destructive/90 text-destructive-foreground px-3 py-2 rounded-full text-xs font-body font-medium shadow-lg"
-        >
-          <AlertCircle className="w-3 h-3" />
-          <span>Microphone error</span>
-        </motion.div>
-      )}
+        )}
+        {error && error !== 'no-speech' && (
+          <motion.div
+            key="voice-error"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed top-4 right-4 z-40 flex items-center gap-2 bg-destructive/90 text-destructive-foreground px-3 py-2 rounded-full text-xs font-body font-medium shadow-lg"
+          >
+            <AlertCircle className="w-3 h-3" />
+            <span>Microphone error</span>
+          </motion.div>
+        )}
       </AnimatePresence>
     </>
   );

@@ -131,15 +131,30 @@ export default function HiddenSettings() {
 
               <div className="border-t border-border/50 pt-4 mt-1">
                 <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">Voice Control (Beta)</p>
-                <div className="space-y-2">
-                  <Label className="text-sm text-muted-foreground">Voice Wake-Word</Label>
-                  <Input
-                    value={form.voiceWakeWord}
-                    onChange={(e) => setForm({ ...form, voiceWakeWord: e.target.value.toLowerCase() })}
-                    placeholder="e.g. help, code red, mayday"
-                    className="bg-muted/50"
-                  />
-                  <p className="text-xs text-muted-foreground">Leave empty to disable. The app will listen for this word and trigger the fake call.</p>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Fake Call Wake-Word</Label>
+                    <Input
+                      value={form.voiceWakeWord}
+                      onChange={(e) => setForm({ ...form, voiceWakeWord: e.target.value.toLowerCase() })}
+                      placeholder="e.g. lavender, help me"
+                      className="bg-muted/50"
+                    />
+                    <p className="text-xs text-muted-foreground">Say this word aloud to trigger a fake incoming call.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      Panic Mode Wake-Word
+                      <span className="bg-destructive/10 text-destructive text-[10px] font-semibold px-1.5 py-0.5 rounded-full">SOS</span>
+                    </Label>
+                    <Input
+                      value={form.panicWakeWord}
+                      onChange={(e) => setForm({ ...form, panicWakeWord: e.target.value.toLowerCase() })}
+                      placeholder="e.g. code red, mayday, help now"
+                      className="bg-muted/50 border-destructive/30 focus:border-destructive/60"
+                    />
+                    <p className="text-xs text-muted-foreground">Say this word aloud to immediately open Panic Mode. Leave empty to disable.</p>
+                  </div>
                 </div>
               </div>
 

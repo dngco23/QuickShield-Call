@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { getDefaultNumberForCountry } from './countryNumbers';
 import { base44 } from '@/api/base44Client';
 
@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS = {
   emergencyContact2Name: "",
   emergencyContact2Number: "",
   voiceWakeWord: "",
+  panicWakeWord: "",
   stealthModeType: "calculator",
 };
 
@@ -87,6 +88,15 @@ export function SafetyProvider({ children }) {
     setActiveCheckIn(null);
   }, []);
 
+  const panicNavigateRef = useRef(null);
+
+  const triggerPanic = useCallback(() => {
+    setPanicModeActive(true);
+    if (panicNavigateRef.current) {
+      panicNavigateRef.current('/panic');
+    }
+  }, []);
+
   const triggerSOS = useCallback(async () => {
     // Start check-in with 0 duration to immediately trigger SOS
     const now = Date.now();
@@ -124,6 +134,8 @@ export function SafetyProvider({ children }) {
       stealthMode,
       setStealthMode,
       triggerSOS,
+      triggerPanic,
+      panicNavigateRef,
       panicModeActive,
       setPanicModeActive,
     }}>
