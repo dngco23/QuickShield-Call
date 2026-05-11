@@ -1,318 +1,338 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Loader2, CheckCircle2, AlertTriangle, MapPin, Trash2, Lock } from 'lucide-react';
+import { Download, Loader2, CheckCircle2, MapPin, Trash2, Lock, WifiOff, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useTrial } from '@/lib/trialContext';
 import PaywallOverlay from '@/components/PaywallOverlay';
+import { base44 } from '@/api/base44Client';
 
-const TILE_CACHE_NAME = 'quickshield-map-tiles-v1';
-const SAFE_ZONES_DB = 'quickshield-db';
+const TILE_CACHE_NAME = 'quickshield-map-tiles-v2';
+const ZOOM_LEVELS = [11, 12, 13, 14, 15]; // street-level detail up to ~500m
+const GRID_RADIUS = 2; // 5×5 tile grid per zoom
+
+// Convert lat/lng to tile x/y at a given zoom
+function latLngToTile(lat, lng, zoom) {
+  const n = Math.pow(2, zoom);
+  const x = Math.floor(((lng + 180) / 360) * n);
+  const latRad = (lat * Math.PI) / 180;
+  const y = Math.floor(
+    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n
+  );
+  return { x, y };
+}
+
+// Generate all tile URLs for a given lat/lng region
+function getTileUrls(lat, lng) {
+  const urls = new Set();
+  for (const zoom of ZOOM_LEVELS) {
+    const { x, y } = latLngToTile(lat, lng, zoom);
+    for (let dx = -GRID_RADIUS; dx <= GRID_RADIUS; dx++) {
+      for (let dy = -GRID_RADIUS; dy <= GRID_RADIUS; dy++) {
+        // Distribute across OSM tile servers (a, b, c) to avoid rate-limiting
+        const server = ['a', 'b', 'c'][(Math.abs(dx + dy)) % 3];
+        urls.add(`https://${server}.tile.openstreetmap.org/${zoom}/${x + dx}/${y + dy}.png`);
+      }
+    }
+  }
+  return [...urls];
+}
+
+// Calculate total cached tile count
+async function getCachedTileCount() {
+  try {
+    const cache = await caches.open(TILE_CACHE_NAME);
+    const keys = await cache.keys();
+    return keys.length;
+  } catch {
+    return 0;
+  }
+}
+
+// Check if a zone already has tiles cached
+async function isZoneCached(lat, lng) {
+  try {
+    const cache = await caches.open(TILE_CACHE_NAME);
+    // Just sample-check one tile per zone at zoom 14
+    const { x, y } = latLngToTile(lat, lng, 14);
+    const testUrl = `https://a.tile.openstreetmap.org/14/${x}/${y}.png`;
+    const match = await cache.match(testUrl);
+    return !!match;
+  } catch {
+    return false;
+  }
+}
 
 export default function MapDownloader() {
   const { hasFeatureAccess } = useTrial();
-  const [downloading, setDownloading] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const [cacheSize, setCacheSize] = useState(0);
-  const [safeZones, setSafeZones] = useState([]);
-  const [newZoneName, setNewZoneName] = useState('');
-  const [userLocation, setUserLocation] = useState(null);
+  const [zones, setZones] = useState([]);
+  const [zoneStatus, setZoneStatus] = useState({}); // { zoneId: 'cached' | 'downloading' | null }
+  const [currentProgress, setCurrentProgress] = useState({ zoneId: null, pct: 0 });
+  const [totalTiles, setTotalTiles] = useState(0);
+  const [loadingZones, setLoadingZones] = useState(true);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
-  // Calculate offline cache size
-  useEffect(() => {
-    const calculateCacheSize = async () => {
-      try {
-        const cache = await caches.open(TILE_CACHE_NAME);
-        const keys = await cache.keys();
-        let size = 0;
-        for (const request of keys) {
-          const response = await cache.match(request);
-          if (response) {
-            size += response.headers.get('content-length') || 0;
-          }
-        }
-        setCacheSize(Math.round(size / 1024 / 1024)); // Convert to MB
-      } catch (_) {}
-    };
+  const loadZones = useCallback(async () => {
+    setLoadingZones(true);
+    try {
+      const fetched = await base44.entities.Zone.filter({ enabled: true });
+      setZones(fetched);
 
-    calculateCacheSize();
-    
-    // Load safe zones
-    loadSafeZones();
+      // Check cache status per zone
+      const status = {};
+      for (const z of fetched) {
+        status[z.id] = (await isZoneCached(z.latitude, z.longitude)) ? 'cached' : null;
+      }
+      setZoneStatus(status);
+    } catch (e) {
+      console.error('Failed to load zones:', e);
+    } finally {
+      setLoadingZones(false);
+    }
   }, []);
 
-  const loadSafeZones = async () => {
-    try {
-      const db = await openDB();
-      const zones = await getAllSafeZones(db);
-      setSafeZones(zones);
-    } catch (_) {}
-  };
+  useEffect(() => {
+    loadZones();
+    getCachedTileCount().then(setTotalTiles);
+  }, [loadZones]);
 
-  const openDB = () => {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(SAFE_ZONES_DB, 1);
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-      request.onupgradeneeded = (event) => {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains('safeZones')) {
-          db.createObjectStore('safeZones', { keyPath: 'id', autoIncrement: true });
-        }
-      };
-    });
-  };
-
-  const getAllSafeZones = (db) => {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction('safeZones', 'readonly');
-      const store = tx.objectStore('safeZones');
-      const request = store.getAll();
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
-    });
-  };
-
-  const downloadMapArea = async () => {
-    setDownloading(true);
-    setDownloadProgress(0);
-
-    try {
-      // Get user's current location
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-      });
-
-      const { latitude, longitude } = position.coords;
-      setUserLocation({ latitude, longitude });
-
-      // Download tiles for the area (5km radius)
-      const cache = await caches.open(TILE_CACHE_NAME);
-      const zoomLevels = [11, 12, 13]; // Local area detail
-      const tileUrls = [];
-
-      // Generate tile URLs for offline access
-      for (const zoom of zoomLevels) {
-        const tileX = Math.floor((longitude + 180) / 360 * Math.pow(2, zoom));
-        const tileY = Math.floor(
-          (1 - Math.log(Math.tan(latitude * Math.PI / 180) + 1 / Math.cos(latitude * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom)
-        );
-
-        // Download a 3x3 grid of tiles around the user
-        for (let dx = -1; dx <= 1; dx++) {
-          for (let dy = -1; dy <= 1; dy++) {
-            const url = `https://tile.openstreetmap.org/${zoom}/${tileX + dx}/${tileY + dy}.png`;
-            tileUrls.push(url);
-          }
-        }
-      }
-
-      // Download and cache tiles
-      for (let i = 0; i < tileUrls.length; i++) {
-        try {
-          const response = await fetch(tileUrls[i]);
-          if (response.ok) {
-            await cache.put(tileUrls[i], response.clone());
-          }
-        } catch (_) {}
-        setDownloadProgress(Math.round(((i + 1) / tileUrls.length) * 100));
-      }
-
-      // Recalculate cache size
-      const keys = await cache.keys();
-      let size = 0;
-      for (const request of keys) {
-        const resp = await cache.match(request);
-        if (resp) {
-          size += resp.headers.get('content-length') || 0;
-        }
-      }
-      setCacheSize(Math.round(size / 1024 / 1024));
-    } catch (error) {
-      console.error('Failed to download maps:', error);
-    } finally {
-      setDownloading(false);
-      setDownloadProgress(0);
-    }
-  };
-
-  const addSafeZone = async () => {
-    if (!newZoneName.trim() || !userLocation) return;
-
-    try {
-      const db = await openDB();
-      const tx = db.transaction('safeZones', 'readwrite');
-      const store = tx.objectStore('safeZones');
-      const zone = {
-        name: newZoneName,
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
-        createdAt: new Date().toISOString(),
-      };
-      store.add(zone);
-
-      await new Promise((resolve, reject) => {
-        tx.oncomplete = resolve;
-        tx.onerror = () => reject(tx.error);
-      });
-
-      setNewZoneName('');
-      await loadSafeZones();
-    } catch (error) {
-      console.error('Failed to add safe zone:', error);
-    }
-  };
-
-  const deleteSafeZone = async (id) => {
-    try {
-      const db = await openDB();
-      const tx = db.transaction('safeZones', 'readwrite');
-      const store = tx.objectStore('safeZones');
-      store.delete(id);
-
-      await new Promise((resolve, reject) => {
-        tx.oncomplete = resolve;
-        tx.onerror = () => reject(tx.error);
-      });
-
-      await loadSafeZones();
-    } catch (error) {
-      console.error('Failed to delete safe zone:', error);
-    }
-  };
-
-  const handleDownloadClick = () => {
+  const downloadZone = async (zone) => {
     if (!hasFeatureAccess('offline_maps')) {
       setShowPaywall(true);
       return;
     }
-    downloadMapArea();
+
+    setZoneStatus((s) => ({ ...s, [zone.id]: 'downloading' }));
+    setCurrentProgress({ zoneId: zone.id, pct: 0 });
+
+    try {
+      const urls = getTileUrls(zone.latitude, zone.longitude);
+      const cache = await caches.open(TILE_CACHE_NAME);
+
+      for (let i = 0; i < urls.length; i++) {
+        try {
+          // Skip if already cached
+          const existing = await cache.match(urls[i]);
+          if (!existing) {
+            const res = await fetch(urls[i], { mode: 'no-cors' });
+            if (res.type === 'opaque' || res.ok) {
+              await cache.put(urls[i], res);
+            }
+          }
+        } catch {
+          // Individual tile failures are non-fatal
+        }
+        setCurrentProgress({ zoneId: zone.id, pct: Math.round(((i + 1) / urls.length) * 100) });
+      }
+
+      setZoneStatus((s) => ({ ...s, [zone.id]: 'cached' }));
+      const count = await getCachedTileCount();
+      setTotalTiles(count);
+    } catch (err) {
+      console.error('Map download failed:', err);
+      setZoneStatus((s) => ({ ...s, [zone.id]: null }));
+    } finally {
+      setCurrentProgress({ zoneId: null, pct: 0 });
+    }
   };
+
+  const downloadAllZones = async () => {
+    for (const zone of zones) {
+      if (zoneStatus[zone.id] !== 'cached') {
+        await downloadZone(zone);
+      }
+    }
+  };
+
+  const clearCache = async () => {
+    setClearing(true);
+    try {
+      await caches.delete(TILE_CACHE_NAME);
+      setTotalTiles(0);
+      const cleared = {};
+      zones.forEach((z) => (cleared[z.id] = null));
+      setZoneStatus(cleared);
+    } catch (e) {
+      console.error('Clear cache failed:', e);
+    } finally {
+      setClearing(false);
+    }
+  };
+
+  const cachedCount = Object.values(zoneStatus).filter((v) => v === 'cached').length;
+  const hasAccess = hasFeatureAccess('offline_maps');
 
   return (
     <>
       {showPaywall && (
-        <PaywallOverlay
-          featureName="Offline Maps"
-          onClose={() => setShowPaywall(false)}
-        />
+        <PaywallOverlay featureName="Offline Maps" onClose={() => setShowPaywall(false)} />
       )}
-      <div className="space-y-5">
-        <div className="border-t border-border/50 pt-5">
-        <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-4">Offline Maps</p>
 
-        {/* Download status */}
-        <AnimatePresence>
-          {downloading && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-medium text-foreground">Downloading map tiles...</p>
-                <p className="text-xs text-muted-foreground">{downloadProgress}%</p>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2">
-                <motion.div
-                  className="bg-primary h-2 rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${downloadProgress}%` }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Cache info */}
-        <div className="bg-muted/30 rounded-lg p-3 mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-foreground">Offline Maps Downloaded</p>
-            <p className="text-xs text-muted-foreground mt-1">{cacheSize} MB cached locally</p>
-          </div>
-          {cacheSize > 0 && <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />}
-        </div>
-
-        {/* Download button */}
-        <div className="relative">
-          <Button
-            onClick={handleDownloadClick}
-            disabled={downloading}
-            className="w-full mb-4 bg-primary hover:bg-primary/90"
+      <div className="border-t border-border/50 pt-5 space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider">Offline Maps</p>
+          <button
+            onClick={loadZones}
+            aria-label="Refresh zone list"
+            className="p-1 text-muted-foreground hover:text-foreground transition-colors"
           >
-            {downloading ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : !hasFeatureAccess('offline_maps') ? (
-              <Lock className="w-4 h-4 mr-2" />
-            ) : (
-              <Download className="w-4 h-4 mr-2" />
-            )}
-            {downloading ? 'Downloading...' : !hasFeatureAccess('offline_maps') ? 'Offline Maps (Pro)' : 'Download Local Maps'}
-          </Button>
+            <RefreshCw className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        {/* Safe zones */}
-        <div className="border-t border-border/50 pt-4">
-          <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider mb-3">Safe Zones</p>
-          <p className="text-xs text-muted-foreground mb-3">Mark safe locations for quick reference on offline maps</p>
-
-          <div className="space-y-2 mb-3">
-            <Label className="text-xs text-muted-foreground">Zone Name</Label>
-            <div className="flex gap-2">
-              <Input
-                value={newZoneName}
-                onChange={(e) => setNewZoneName(e.target.value)}
-                placeholder="e.g. Police Station, Shelter"
-                className="bg-muted/50 text-xs h-8"
-                disabled={!userLocation}
-              />
-              <Button
-                onClick={addSafeZone}
-                size="sm"
-                variant="outline"
-                disabled={!newZoneName.trim() || !userLocation}
-                className="h-8"
-              >
-                <MapPin className="w-3 h-3" />
-              </Button>
+        {/* Summary */}
+        <div className="bg-muted/30 rounded-xl p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <WifiOff className="w-4 h-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs font-medium text-foreground">
+                {cachedCount} / {zones.length} zone{zones.length !== 1 ? 's' : ''} cached
+              </p>
+              <p className="text-xs text-muted-foreground">{totalTiles} tiles stored locally</p>
             </div>
-            {!userLocation && (
-              <p className="text-xs text-muted-foreground">Download maps to mark safe zones at your location</p>
-            )}
           </div>
+          {cachedCount > 0 && (
+            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+          )}
+        </div>
 
-          {/* Safe zones list */}
+        {/* Per-zone list */}
+        {loadingZones ? (
+          <div className="flex items-center gap-2 py-2">
+            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">Loading zones...</p>
+          </div>
+        ) : zones.length === 0 ? (
+          <div className="bg-accent/20 border border-accent/30 rounded-xl p-4 text-center">
+            <MapPin className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">
+              No zones set up yet. Add zones in the Zones tab to download their maps.
+            </p>
+          </div>
+        ) : (
           <div className="space-y-2">
-            {safeZones.length > 0 ? (
-              safeZones.map((zone) => (
+            {zones.map((zone) => {
+              const status = zoneStatus[zone.id];
+              const isDownloading = status === 'downloading';
+              const isCached = status === 'cached';
+              const pct = currentProgress.zoneId === zone.id ? currentProgress.pct : 0;
+
+              return (
                 <motion.div
                   key={zone.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center justify-between bg-accent/10 border border-accent/20 rounded-lg p-2"
+                  layout
+                  className="bg-card border border-border/50 rounded-xl p-3"
                 >
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-3 h-3 text-accent-foreground" />
-                    <p className="text-xs font-medium text-foreground">{zone.name}</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <MapPin className="w-3.5 h-3.5 text-primary flex-shrink-0" aria-hidden="true" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{zone.name}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {zone.latitude?.toFixed(4)}, {zone.longitude?.toFixed(4)}
+                          {zone.radius_meters && ` · r=${zone.radius_meters}m`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => downloadZone(zone)}
+                      disabled={isDownloading}
+                      aria-label={
+                        isCached
+                          ? `Re-download maps for ${zone.name}`
+                          : `Download maps for ${zone.name}`
+                      }
+                      className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all
+                        ${isCached
+                          ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+                          : hasAccess
+                          ? 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
+                          : 'bg-muted text-muted-foreground border border-border'
+                        }`}
+                    >
+                      {isDownloading ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : isCached ? (
+                        <CheckCircle2 className="w-3 h-3" />
+                      ) : hasAccess ? (
+                        <Download className="w-3 h-3" />
+                      ) : (
+                        <Lock className="w-3 h-3" />
+                      )}
+                      {isDownloading ? `${pct}%` : isCached ? 'Cached' : 'Download'}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => deleteSafeZone(zone.id)}
-                    className="text-muted-foreground hover:text-destructive transition-colors"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
+
+                  {/* Progress bar */}
+                  <AnimatePresence>
+                    {isDownloading && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-2"
+                      >
+                        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                          <motion.div
+                            className="bg-primary h-1.5 rounded-full"
+                            animate={{ width: `${pct}%` }}
+                            transition={{ duration: 0.2 }}
+                          />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Downloading street-level tiles ({ZOOM_LEVELS.length} zoom levels)…
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
-              ))
-            ) : (
-              <p className="text-xs text-muted-foreground italic">No safe zones marked yet</p>
-            )}
+              );
+            })}
           </div>
+        )}
+
+        {/* Download all + clear */}
+        <div className="flex gap-2">
+          <Button
+            onClick={
+              hasAccess
+                ? downloadAllZones
+                : () => setShowPaywall(true)
+            }
+            disabled={zones.length === 0 || zones.every((z) => zoneStatus[z.id] === 'cached')}
+            className="flex-1 bg-primary hover:bg-primary/90 text-xs"
+            size="sm"
+          >
+            {hasAccess ? (
+              <Download className="w-3 h-3 mr-1.5" />
+            ) : (
+              <Lock className="w-3 h-3 mr-1.5" />
+            )}
+            {hasAccess ? 'Download All Zones' : 'Offline Maps (Pro)'}
+          </Button>
+
+          {totalTiles > 0 && (
+            <Button
+              onClick={clearCache}
+              disabled={clearing}
+              variant="outline"
+              size="sm"
+              className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+              aria-label="Clear all cached map tiles"
+            >
+              {clearing ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Trash2 className="w-3 h-3" />
+              )}
+            </Button>
+          )}
         </div>
-      </div>
+
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          Downloads OpenStreetMap tiles at zoom levels 11–15 (neighbourhood → street level) for offline use during emergencies. Cached tiles persist across sessions.
+        </p>
       </div>
     </>
   );
