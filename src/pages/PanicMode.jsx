@@ -7,6 +7,7 @@ import L from 'leaflet';
 import { base44 } from '@/api/base44Client';
 import { useSafety } from '@/lib/safetyContext.jsx';
 import { usePowerSave } from '@/lib/powerSaveContext';
+import { vibratePanic } from '@/lib/haptics';
 import { useAudioRecorder } from '@/lib/useAudioRecorder';
 import { useHandsFreeVoiceCommand } from '@/lib/useHandsFreeVoiceCommand';
 import { Button } from '@/components/ui/button';
@@ -97,9 +98,10 @@ export default function PanicMode() {
     };
   }, []);
 
-  // Start recording on panic mode enter
+  // Start recording on panic mode enter + haptic confirmation
   useEffect(() => {
     setPanicModeActive(true);
+    vibratePanic();
     startRecording();
     setIsRecording(true);
 

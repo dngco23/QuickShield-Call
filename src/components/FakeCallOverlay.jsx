@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Phone, PhoneOff, User } from 'lucide-react';
 import { useSafety } from '@/lib/safetyContext.jsx';
+import { vibrateRinging, vibrateStop } from '@/lib/haptics';
 
 export default function FakeCallOverlay() {
   const { showCall, dismissCall, settings } = useSafety();
@@ -12,6 +13,9 @@ export default function FakeCallOverlay() {
     if (showCall) {
       setCallState('ringing');
       setTimer(0);
+      vibrateRinging();
+    } else {
+      vibrateStop();
     }
   }, [showCall]);
 
@@ -29,14 +33,19 @@ export default function FakeCallOverlay() {
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  const handleAnswer = () => setCallState('active');
+  const handleAnswer = () => {
+    vibrateStop();
+    setCallState('active');
+  };
   
   const handleDecline = () => {
+    vibrateStop();
     setCallState('ended');
     setTimeout(dismissCall, 400);
   };
 
   const handleEndCall = () => {
+    vibrateStop();
     setCallState('ended');
     setTimeout(dismissCall, 400);
   };
