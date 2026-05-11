@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Shield, BookOpen, MapPin, ShieldAlert } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { format, subDays, startOfDay } from 'date-fns';
+import { usePullToRefresh } from '@/lib/usePullToRefresh';
+import PullToRefreshIndicator from '@/components/PullToRefresh';
 
 const DAYS = 7;
 
@@ -11,9 +13,9 @@ export default function ActivityDashboard() {
   const [data, setData] = useState([]);
   const [stats, setStats] = useState({ sos: 0, journals: 0, zones: 0, recordings: 0 });
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef(null);
 
-  useEffect(() => {
-    const load = async () => {
+  const load = useCallback(async () => {
       try {
         const [recordings, journals, zoneNotifs] = await Promise.all([
           base44.entities.Recording.list('-created_date', 100),
@@ -57,9 +59,11 @@ export default function ActivityDashboard() {
       } finally {
         setLoading(false);
       }
-    };
-    load();
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const { pullProgress, isRefreshing } = usePullToRefresh(scrollRef, load);
 
   const statCards = [
     { icon: ShieldAlert, label: 'SOS Events', value: stats.sos, color: 'text-red-500', bg: 'bg-red-50' },
@@ -80,11 +84,13 @@ export default function ActivityDashboard() {
 
   return (
     <motion.div
+      ref={scrollRef}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
-      className="bg-card border border-border/50 rounded-2xl p-5 space-y-5"
+      className="bg-card border border-border/50 rounded-2xl p-5 space-y-5 overflow-y-auto scroll-container"
     >
+      <PullToRefreshIndicator pullProgress={pullProgress} isRefreshing={isRefreshing} />
       <div>
         <p className="text-xs font-medium text-foreground/60 uppercase tracking-wider">Activity Overview</p>
         <p className="text-sm text-muted-foreground mt-0.5">Last 7 days</p>

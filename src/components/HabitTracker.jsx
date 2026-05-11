@@ -26,30 +26,17 @@ export default function HabitTracker() {
 
       const today = new Date().toISOString().split('T')[0];
       const completionDates = habit.completion_dates || [];
-      
-      // Check if already completed today
-      if (completionDates.includes(today)) {
-        return; // Already completed
-      }
+      if (completionDates.includes(today)) return;
 
       const newCompletionDates = [...completionDates, today];
-      
-      // Calculate streak
       let streak = 0;
       let checkDate = new Date();
       while (true) {
         const dateStr = checkDate.toISOString().split('T')[0];
-        if (newCompletionDates.includes(dateStr)) {
-          streak++;
-          checkDate.setDate(checkDate.getDate() - 1);
-        } else {
-          break;
-        }
+        if (newCompletionDates.includes(dateStr)) { streak++; checkDate.setDate(checkDate.getDate() - 1); }
+        else break;
       }
-
       const longestStreak = Math.max(streak, habit.longest_streak || 0);
-      
-      // Update weekly completions
       const dayOfWeek = new Date().getDay();
       const weeklyCompletions = [...(habit.weekly_completions || [0, 0, 0, 0, 0, 0, 0])];
       weeklyCompletions[dayOfWeek]++;
@@ -61,19 +48,45 @@ export default function HabitTracker() {
         weekly_completions: weeklyCompletions
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['habits'] });
+    // Optimistic update: mark completed immediately
+    onMutate: async (habitId) => {
+      await queryClient.cancelQueries({ queryKey: ['habits'] });
+      const previous = queryClient.getQueryData(['habits']);
+      const today = new Date().toISOString().split('T')[0];
+      queryClient.setQueryData(['habits'], (old) =>
+        (old || []).map((h) =>
+          h.id === habitId && !(h.completion_dates || []).includes(today)
+            ? { ...h, completion_dates: [...(h.completion_dates || []), today], current_streak: (h.current_streak || 0) + 1 }
+            : h
+        )
+      );
+      return { previous };
     },
+    onError: (_err, _id, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(['habits'], ctx.previous);
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['habits'] }),
   });
 
   const createHabitMutation = useMutation({
     mutationFn: async (habitData) => {
-      await base44.entities.Habit.create(habitData);
+      return await base44.entities.Habit.create(habitData);
+    },
+    // Optimistic update: show new habit instantly with a temp id
+    onMutate: async (habitData) => {
+      await queryClient.cancelQueries({ queryKey: ['habits'] });
+      const previous = queryClient.getQueryData(['habits']);
+      const tempHabit = { ...habitData, id: `temp-${Date.now()}`, completion_dates: [], current_streak: 0, longest_streak: 0, weekly_completions: [0,0,0,0,0,0,0], is_active: true };
+      queryClient.setQueryData(['habits'], (old) => [...(old || []), tempHabit]);
+      return { previous };
+    },
+    onError: (_err, _data, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(['habits'], ctx.previous);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['habits'] });
       setShowForm(false);
     },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['habits'] }),
   });
 
   if (isLoading) {

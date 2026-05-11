@@ -1,6 +1,7 @@
-import { Toaster } from "@/components/ui/toaster"
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClientInstance } from '@/lib/query-client'
+import { lazy, Suspense } from 'react';
+import { Toaster } from "@/components/ui/toaster";
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClientInstance } from '@/lib/query-client';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -8,10 +9,15 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { SafetyProvider } from '@/lib/safetyContext.jsx';
 import { TrialProvider } from '@/lib/trialContext';
 import { PowerSaveProvider } from '@/lib/powerSaveContext';
-import { lazy, Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useTheme } from '@/lib/useTheme';
+import VoiceListener from '@/components/VoiceListener';
+import VoiceCommandListener from '@/components/VoiceCommandListener';
+import PanicVoiceListener from '@/components/PanicVoiceListener';
+import BatteryMonitor from '@/components/BatteryMonitor';
+import ZoneMonitor from '@/components/ZoneMonitor';
 
+// Route-based code splitting
 const Home = lazy(() => import('@/pages/Home'));
 const Journal = lazy(() => import('@/pages/Journal'));
 const Insights = lazy(() => import('@/pages/Insights'));
@@ -31,12 +37,6 @@ const PageLoader = () => (
     <Loader2 className="w-8 h-8 text-primary animate-spin" />
   </div>
 );
-import VoiceListener from '@/components/VoiceListener';
-import VoiceCommandListener from '@/components/VoiceCommandListener';
-import PanicVoiceListener from '@/components/PanicVoiceListener';
-import BatteryMonitor from '@/components/BatteryMonitor';
-import TrialBanner from '@/components/TrialBanner';
-import ZoneMonitor from '@/components/ZoneMonitor';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -91,11 +91,11 @@ const AuthenticatedApp = () => {
 function App() {
   return (
     <AuthProvider>
-      <ThemeInit />
       <QueryClientProvider client={queryClientInstance}>
         <PowerSaveProvider>
           <TrialProvider>
             <Router>
+              <ThemeInit />
               <AuthenticatedApp />
             </Router>
           </TrialProvider>
@@ -103,7 +103,7 @@ function App() {
         <Toaster />
       </QueryClientProvider>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;
