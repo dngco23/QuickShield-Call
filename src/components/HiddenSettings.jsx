@@ -180,27 +180,24 @@ export default function HiddenSettings() {
                 {stealthMode && (
                   <div className="mt-3 space-y-2">
                     <Label className="text-sm text-muted-foreground">Choose Disguise</Label>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setForm({ ...form, stealthModeType: 'calculator' })}
-                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                          form.stealthModeType === 'calculator'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                        }`}
-                      >
-                        🧮 Calculator
-                      </button>
-                      <button
-                        onClick={() => setForm({ ...form, stealthModeType: 'weather' })}
-                        className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                          form.stealthModeType === 'weather'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                        }`}
-                      >
-                        ☀️ Weather
-                      </button>
+                    <div className="flex gap-2 flex-wrap">
+                      {[
+                        { value: 'calculator', label: '🧮 Calculator' },
+                        { value: 'weather', label: '☀️ Weather' },
+                        { value: 'news', label: '📰 News' },
+                      ].map(({ value, label }) => (
+                        <button
+                          key={value}
+                          onClick={() => setForm({ ...form, stealthModeType: value })}
+                          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                            form.stealthModeType === value
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
                     </div>
                     <p className="text-xs text-muted-foreground pt-2">Tap the display 5 times to exit stealth mode</p>
                   </div>
