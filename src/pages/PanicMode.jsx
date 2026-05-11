@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, AlertCircle, Send, Loader2, Mic, Wifi, WifiOff, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useBackNav } from '@/lib/useBackNav';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { base44 } from '@/api/base44Client';
@@ -31,6 +32,7 @@ L.Icon.Default.mergeOptions({
 
 export default function PanicMode() {
   const navigate = useNavigate();
+  const goBack = useBackNav('/');
   const { panicModeActive, setPanicModeActive } = useSafety();
   const { isPowerSaving } = usePowerSave();
   const { startRecording, stopRecording } = useAudioRecorder();
@@ -255,14 +257,15 @@ export default function PanicMode() {
       >
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate('/')}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
+            onClick={goBack}
+            aria-label="Exit panic mode and go back"
+            className="p-2 hover:bg-muted rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <ChevronLeft className="w-6 h-6 text-foreground" />
+            <ChevronLeft className="w-6 h-6 text-foreground" aria-hidden="true" />
           </button>
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-destructive" />
-            <h1 className="font-display text-xl font-semibold text-foreground">Panic Mode</h1>
+            <AlertCircle className="w-5 h-5 text-destructive" aria-hidden="true" />
+            <h1 className="font-display text-xl font-semibold text-foreground" id="panic-heading">Panic Mode</h1>
           </div>
         </div>
         <motion.div

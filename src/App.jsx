@@ -16,6 +16,8 @@ import VoiceCommandListener from '@/components/VoiceCommandListener';
 import PanicVoiceListener from '@/components/PanicVoiceListener';
 import BatteryMonitor from '@/components/BatteryMonitor';
 import ZoneMonitor from '@/components/ZoneMonitor';
+import PageTransition from '@/components/PageTransition';
+import { AnimatePresence } from 'framer-motion';
 
 // Route-based code splitting
 const Home = lazy(() => import('@/pages/Home'));
@@ -69,20 +71,22 @@ const AuthenticatedApp = () => {
       <BatteryMonitor />
       <ZoneMonitor />
       <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/journal" element={<Journal />} />
-          <Route path="/insights" element={<Insights />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/emergency-contacts" element={<EmergencyContacts />} />
-          <Route path="/zones" element={<Zones />} />
-          <Route path="/panic" element={<PanicMode />} />
-          <Route path="/parent-dashboard" element={<ParentDashboard />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="*" element={<PageNotFound />} />
-        </Routes>
+        <AnimatePresence mode="wait" initial={false}>
+          <Routes>
+            <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+            <Route path="/journal" element={<PageTransition><Journal /></PageTransition>} />
+            <Route path="/insights" element={<PageTransition><Insights /></PageTransition>} />
+            <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
+            <Route path="/emergency-contacts" element={<PageTransition direction="push"><EmergencyContacts /></PageTransition>} />
+            <Route path="/zones" element={<PageTransition><Zones /></PageTransition>} />
+            <Route path="/panic" element={<PageTransition direction="push"><PanicMode /></PageTransition>} />
+            <Route path="/parent-dashboard" element={<PageTransition direction="push"><ParentDashboard /></PageTransition>} />
+            <Route path="/pricing" element={<PageTransition direction="push"><Pricing /></PageTransition>} />
+            <Route path="/about" element={<PageTransition direction="push"><About /></PageTransition>} />
+            <Route path="/contact" element={<PageTransition direction="push"><Contact /></PageTransition>} />
+            <Route path="*" element={<PageTransition><PageNotFound /></PageTransition>} />
+          </Routes>
+        </AnimatePresence>
       </Suspense>
     </SafetyProvider>
   );

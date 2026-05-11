@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Plus, Trash2, Edit2, AlertCircle, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useBackNav } from '@/lib/useBackNav';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ import {
 
 export default function EmergencyContacts() {
   const navigate = useNavigate();
+  const goBack = useBackNav('/settings');
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -112,10 +114,11 @@ export default function EmergencyContacts() {
       <div className="px-5 pt-8">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <button
-            onClick={() => navigate('/settings')}
-            className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-6"
+            onClick={goBack}
+            aria-label="Go back to Settings"
+            className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
             <span className="text-sm font-body font-medium">Back</span>
           </button>
 
@@ -235,24 +238,24 @@ export default function EmergencyContacts() {
                   <div className="flex gap-2">
                     <a
                       href={`tel:${contact.phone}`}
-                      className="p-2 hover:bg-green-50 rounded-lg transition-colors"
-                      title="Call"
+                      aria-label={`Call ${contact.name}`}
+                      className="p-2 hover:bg-green-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <Phone className="w-4 h-4 text-green-600" />
+                      <Phone className="w-4 h-4 text-green-600" aria-hidden="true" />
                     </a>
                     <button
                       onClick={() => handleEdit(contact)}
-                      className="p-2 hover:bg-muted rounded-lg transition-colors"
-                      title="Edit"
+                      aria-label={`Edit ${contact.name}`}
+                      className="p-2 hover:bg-muted rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <Edit2 className="w-4 h-4 text-primary" />
+                      <Edit2 className="w-4 h-4 text-primary" aria-hidden="true" />
                     </button>
                     <button
                       onClick={() => handleDelete(contact.id)}
-                      className="p-2 hover:bg-destructive/10 rounded-lg transition-colors"
-                      title="Delete"
+                      aria-label={`Delete ${contact.name}`}
+                      className="p-2 hover:bg-destructive/10 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
-                      <Trash2 className="w-4 h-4 text-destructive" />
+                      <Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
                     </button>
                   </div>
                 </div>

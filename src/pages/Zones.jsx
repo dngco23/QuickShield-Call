@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Plus, Loader2, Trash2, MapPin, Navigation, Radio, CheckCircle, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useBackNav } from '@/lib/useBackNav';
 import { MapContainer, TileLayer, Marker, Circle, Popup, useMapEvent } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -49,6 +50,7 @@ L.Icon.Default.mergeOptions({
 
 export default function Zones() {
   const navigate = useNavigate();
+  const goBack = useBackNav('/');
   const [zones, setZones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -214,14 +216,15 @@ export default function Zones() {
         className="flex items-center gap-3 px-5 pt-8 pb-6"
       >
         <button
-          onClick={() => navigate('/')}
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
+          onClick={goBack}
+          aria-label="Go back"
+          className="p-2 hover:bg-muted rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5" aria-hidden="true" />
         </button>
         <div className="flex items-center gap-2">
-          <MapPin className="w-5 h-5 text-primary" />
-          <h1 className="font-display text-2xl font-semibold">Safe Zones</h1>
+          <MapPin className="w-5 h-5 text-primary" aria-hidden="true" />
+          <h1 className="font-display text-2xl font-semibold" id="zones-heading">Safe Zones</h1>
         </div>
       </motion.div>
 
@@ -420,9 +423,10 @@ export default function Zones() {
                 </div>
                 <button
                   onClick={() => handleDeleteZone(zone.id)}
-                  className="p-2 hover:bg-destructive/10 rounded-lg transition-colors text-destructive"
+                  aria-label={`Delete zone ${zone.name}`}
+                  className="p-2 hover:bg-destructive/10 rounded-lg transition-colors text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
                 </button>
               </motion.div>
             ))}

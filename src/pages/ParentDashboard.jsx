@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MapPin, Battery, LogOut, Plus, Loader2, Link2, MapPinOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useBackNav } from '@/lib/useBackNav';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ import LocationMap from '@/components/LocationMap';
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
+  const goBack = useBackNav('/');
   const [user, setUser] = useState(null);
   const [linkedChildren, setLinkedChildren] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,14 +95,15 @@ export default function ParentDashboard() {
         className="flex items-center gap-3 px-5 pt-8 pb-6"
       >
         <button
-          onClick={() => navigate('/')}
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
+          onClick={goBack}
+          aria-label="Go back"
+          className="p-2 hover:bg-muted rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5" aria-hidden="true" />
         </button>
         <div className="flex items-center gap-2">
-          <Link2 className="w-5 h-5 text-primary" />
-          <h1 className="font-display text-2xl font-semibold">Parental Controls</h1>
+          <Link2 className="w-5 h-5 text-primary" aria-hidden="true" />
+          <h1 className="font-display text-2xl font-semibold" id="parent-dashboard-heading">Parental Controls</h1>
         </div>
       </motion.div>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Loader2, CheckCircle2, ChevronRight } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useBackNav } from '@/lib/useBackNav';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +24,7 @@ import { useTheme } from '@/lib/useTheme';
 
 export default function Settings() {
   const navigate = useNavigate();
+  const goBack = useBackNav('/');
   const { isDark, toggle: toggleTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [form, setForm] = useState({
@@ -101,10 +103,11 @@ export default function Settings() {
       <div className="px-5 pt-8">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-6"
+            onClick={goBack}
+            aria-label="Go back"
+            className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors mb-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
             <span className="text-sm font-body font-medium">Back</span>
           </button>
 

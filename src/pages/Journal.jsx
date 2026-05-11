@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Plus, BookOpen, Mic, MicOff, Loader2, Cloud, CloudOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useBackNav } from '@/lib/useBackNav';
 import { Button } from '@/components/ui/button';
 import SyncStatus from '@/components/SyncStatus';
 import { useOfflineJournal } from '@/lib/useOfflineJournal';
@@ -12,6 +13,7 @@ import PullToRefreshIndicator from '@/components/PullToRefresh';
 
 export default function Journal() {
   const navigate = useNavigate();
+  const goBack = useBackNav('/');
   const [showForm, setShowForm] = useState(false);
   const [newEntry, setNewEntry] = useState('');
   const [mood, setMood] = useState('neutral');
@@ -145,7 +147,7 @@ export default function Journal() {
         className="flex items-center gap-3 px-5 pt-8 pb-6"
       >
         <button
-          onClick={() => navigate('/')}
+          onClick={goBack}
           aria-label="Go back"
           className="p-2 hover:bg-muted rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
