@@ -85,9 +85,11 @@ export default function PanicVoiceListener() {
       }
     };
 
+    const fatalErrors = new Set(['not-allowed', 'service-not-allowed', 'network']);
+
     recognition.onerror = (event) => {
       activeRef.current = false;
-      if (event.error !== 'aborted') {
+      if (!fatalErrors.has(event.error) && event.error !== 'aborted') {
         scheduleRestart(1500);
       }
     };

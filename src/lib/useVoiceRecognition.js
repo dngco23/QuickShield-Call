@@ -57,28 +57,26 @@ export function useVoiceRecognition(wakeWord, onWakeWordDetected) {
       }
     };
 
+    const fatalErrors = new Set(['not-allowed', 'service-not-allowed', 'network']);
+
     recognition.onerror = (event) => {
       setError(event.error);
-      // Restart on errors except for abort
-      if (event.error !== 'aborted') {
+      if (!fatalErrors.has(event.error) && event.error !== 'aborted') {
         clearTimeout(restartTimeoutRef.current);
         restartTimeoutRef.current = setTimeout(() => {
-          try {
-            recognition.start();
-          } catch (_) {}
+          try { recognition.start(); } catch (_) {}
         }, 1500);
       }
     };
 
     recognition.onend = () => {
       setIsListening(false);
-      // Auto-restart listening if it ended unexpectedly
-      clearTimeout(restartTimeoutRef.current);
-      restartTimeoutRef.current = setTimeout(() => {
-        try {
-          recognition.start();
-        } catch (_) {}
-      }, 1000);
+      if (!fatalErrors.has(recognitionRef.current?._lastError)) {
+        clearTimeout(restartTimeoutRef.current);
+        restartTimeoutRef.current = setTimeout(() => {
+          try { recognition.start(); } catch (_) {}
+        }, 1000);
+      }
     };
 
     // Start listening

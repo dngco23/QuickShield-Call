@@ -68,15 +68,20 @@ const VoiceCommandListener = () => {
       }
     };
 
+    const fatalErrors = new Set(['not-allowed', 'service-not-allowed', 'network']);
+    let blocked = false;
+
     recognition.onerror = (event) => {
-      setError(`Voice recognition error: ${event.error}`);
       console.error('Speech recognition error:', event.error);
+      if (fatalErrors.has(event.error)) {
+        blocked = true;
+        setError(`Voice recognition error: ${event.error}`);
+      }
     };
 
     recognition.onend = () => {
       setIsListening(false);
-      // Restart listening if it ended unexpectedly
-      if (recognitionRef.current && !error) {
+      if (!blocked && recognitionRef.current) {
         try {
           recognition.start();
         } catch (e) {
