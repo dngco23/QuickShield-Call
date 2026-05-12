@@ -40,16 +40,28 @@
   ],
   "rls": {
     "create": {
-      "created_by": "{{user.email}}"
+      "created_by": "{{user.email}}",
+      "user_condition": {
+        "isAuthenticated": true
+      }
     },
     "read": {
-      "created_by": "{{user.email}}"
+      "created_by": "{{user.email}}",
+      "user_condition": {
+        "isAuthenticated": true
+      }
     },
     "update": {
-      "created_by": "{{user.email}}"
+      "created_by": "{{user.email}}",
+      "user_condition": {
+        "isAuthenticated": true
+      }
     },
     "delete": {
-      "created_by": "{{user.email}}"
+      "created_by": "{{user.email}}",
+      "user_condition": {
+        "isAuthenticated": true
+      }
     }
   }
 }
