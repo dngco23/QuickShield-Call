@@ -31,6 +31,7 @@ const ParentDashboard = lazy(() => import('@/pages/ParentDashboard'));
 const Pricing = lazy(() => import('@/pages/Pricing'));
 const About = lazy(() => import('@/pages/About'));
 const Contact = lazy(() => import('@/pages/Contact'));
+const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy'));
 
 function ThemeInit() { useTheme(); return null; }
 
@@ -84,6 +85,7 @@ const AuthenticatedApp = () => {
             <Route path="/pricing" element={<PageTransition direction="push"><Pricing /></PageTransition>} />
             <Route path="/about" element={<PageTransition direction="push"><About /></PageTransition>} />
             <Route path="/contact" element={<PageTransition direction="push"><Contact /></PageTransition>} />
+            <Route path="/privacy" element={<PageTransition direction="push"><PrivacyPolicy /></PageTransition>} />
             <Route path="*" element={<PageTransition><PageNotFound /></PageTransition>} />
           </Routes>
         </AnimatePresence>

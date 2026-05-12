@@ -107,6 +107,14 @@ export default function BottomNav() {
         >
           Contact
         </a>
+        <a
+          href="/privacy"
+          onClick={(e) => { e.preventDefault(); navigate('/privacy'); }}
+          className="text-[10px] text-muted-foreground hover:text-primary transition-colors font-body min-h-[44px] flex items-center
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded"
+        >
+          Privacy
+        </a>
       </div>
     </nav>
   );
