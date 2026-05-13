@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY');
+const STRIPE_SECRET_KEY = Deno.env.get('Ssk_live_51TUy6pCmyrIA0G16n6UVKwGJGUdAqYlmxkNtLAv4MS0ccSGkUevQ7rTmON6MVePM8QLMmMi3jAb8dVavZbdpnjC8000GkabfcdTRIPE_SECRET_KEY');
 const STRIPE_API_URL = 'https://api.stripe.com/v1';
 
 const PRICE_IDS = {
