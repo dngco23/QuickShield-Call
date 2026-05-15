@@ -48,7 +48,11 @@ export const AuthProvider = ({ children }) => {
         }
         setIsLoadingPublicSettings(false);
       } catch (appError) {
-        console.error('App state check failed:', appError);
+        // Use warn instead of error to avoid triggering preview error overlays
+        // for expected backend states (app not provisioned, auth required, etc.)
+        if (import.meta.env.DEV) {
+          console.warn('[AuthContext] App state check failed:', appError?.message || appError);
+        }
         
         // Handle app-level errors
         if (appError.status === 403 && appError.data?.extra_data?.reason) {
@@ -79,7 +83,9 @@ export const AuthProvider = ({ children }) => {
         setIsLoadingAuth(false);
       }
     } catch (error) {
-      console.error('Unexpected error:', error);
+      if (import.meta.env.DEV) {
+        console.warn('[AuthContext] Unexpected error during app state check:', error?.message || error);
+      }
       setAuthError({
         type: 'unknown',
         message: error.message || 'An unexpected error occurred'
@@ -99,7 +105,9 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(false);
       setAuthChecked(true);
     } catch (error) {
-      console.error('User auth check failed:', error);
+      if (import.meta.env.DEV) {
+        console.warn('[AuthContext] User auth check failed:', error?.message || error);
+      }
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
       setAuthChecked(true);
