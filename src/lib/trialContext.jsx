@@ -12,9 +12,21 @@ export function TrialProvider({ children }) {
 
   useEffect(() => {
     const loadTrialInfo = async () => {
+      let user = null;
       try {
-        const user = await base44.auth.me();
-        
+        user = await base44.auth.me();
+      } catch (error) {
+        // Expected when user is not authenticated, app is not provisioned,
+        // or the Base44 backend is unreachable in preview/dev environments.
+        // Treat as anonymous user — no trial, no pro access.
+        if (import.meta.env.DEV) {
+          console.debug('[TrialContext] Skipping trial info (auth unavailable):', error?.message || error);
+        }
+        setLoading(false);
+        return;
+      }
+
+      try {
         if (!user) {
           setLoading(false);
           return;
@@ -49,7 +61,9 @@ export function TrialProvider({ children }) {
           await startTrial();
         }
       } catch (error) {
-        console.error('Failed to load trial info:', error);
+        if (import.meta.env.DEV) {
+          console.debug('[TrialContext] Failed to load trial info:', error?.message || error);
+        }
       } finally {
         setLoading(false);
       }
@@ -75,7 +89,9 @@ export function TrialProvider({ children }) {
         isExpired: false,
       });
     } catch (error) {
-      console.error('Failed to start trial:', error);
+      if (import.meta.env.DEV) {
+        console.debug('[TrialContext] Failed to start trial:', error?.message || error);
+      }
     }
   };
 
