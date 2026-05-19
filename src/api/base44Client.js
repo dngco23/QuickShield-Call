@@ -343,4 +343,4 @@ export const base44 = {
   integrations,
 };
 
-export defaut
+export default base44;
