@@ -31,18 +31,3 @@ function App() {
 }
 
 export default App;
-ema */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-      />
-
-      {/* Core App Layout */}
-      <h1>QuickShield Call</h1>
-      <p>Advanced spam protection, real-time call screening, and secure routing for business lines.</p>
-      <p style={{ color: '#666' }}>Secure Communication Utilities</p>
-    </div>
-  );
-}
-
-export default App;
