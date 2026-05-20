@@ -1,4 +1,3 @@
-```jsx
 import React from 'react';
 
 function App() {
@@ -17,7 +16,7 @@ function App() {
 
   return (
     <div style={{ textAlign: 'center', paddingTop: '50px', fontFamily: 'sans-serif' }}>
-      {/* Injects your Google SEO Schema securely */}
+      {/* Google SEO Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
@@ -32,4 +31,3 @@ function App() {
 }
 
 export default App;
-```
