@@ -1,7 +1,7 @@
+```jsx
 import React from 'react';
 
 function App() {
-  // Safe React-friendly structured data object
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -16,20 +16,20 @@ function App() {
   };
 
   return (
-    <>
-      {/* This injects the JSON-LD cleanly into the page header structure */}
+    <div style={{ textAlign: 'center', paddingTop: '50px', fontFamily: 'sans-serif' }}>
+      {/* Injects your Google SEO Schema securely */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
-      {/* Your actual website visual sections go here */}
-      <main>
-        <h1>QuickShield Call Premium Security</h1>
-        {/* Your other components/HTML elements */}
-      </main>
-    </>
+      {/* Core App Layout */}
+      <h1>QuickShield Call</h1>
+      <p>Advanced spam protection, real-time call screening, and secure routing for business lines.</p>
+      <p style={{ color: '#666' }}>Secure Communication Utilities</p>
+    </div>
   );
 }
 
 export default App;
+```
