@@ -35,10 +35,13 @@ if (typeof window !== 'undefined') {
     } catch {
       // If anything goes wrong in the filter, fall through to original.
     }
-    originalConsoleError.apply(console, args);
-  };
-}
+  // Replace the very bottom layout block with this:
+const rootElement = document.getElementById('root');
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <App />
-)
+if (rootElement) {
+  ReactDOM.createRoot(rootElement).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+}
