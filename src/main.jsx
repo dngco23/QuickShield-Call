@@ -35,7 +35,10 @@ if (typeof window !== 'undefined') {
     } catch {
       // If anything goes wrong in the filter, fall through to original.
     }
-  // Replace the very bottom layout block with this:
+    originalConsoleError.apply(console, args);
+  };
+}
+
 const rootElement = document.getElementById('root');
 
 if (rootElement) {
